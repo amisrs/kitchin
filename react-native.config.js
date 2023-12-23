@@ -1,7 +1,7 @@
 module.exports = {
-  project: {
-    ios: {
-      automaticPodsInstallation: true
-    }
-  }
-}
+    project: {
+        ios: {
+            automaticPodsInstallation: true,
+        },
+    },
+};
