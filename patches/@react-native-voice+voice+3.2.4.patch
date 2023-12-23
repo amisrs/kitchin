@@ -7,7 +7,7 @@ index 0000000..0d259dd
 +o/classes
 diff --git a/node_modules/@react-native-voice/voice/android/build/.transforms/17f7311acc6049b0fb43dd910bb97fd3/transformed/classes/classes_dex/classes.dex b/node_modules/@react-native-voice/voice/android/build/.transforms/17f7311acc6049b0fb43dd910bb97fd3/transformed/classes/classes_dex/classes.dex
 new file mode 100644
-index 0000000..d52eb8b
+index 0000000..e9225c4
 Binary files /dev/null and b/node_modules/@react-native-voice/voice/android/build/.transforms/17f7311acc6049b0fb43dd910bb97fd3/transformed/classes/classes_dex/classes.dex differ
 diff --git a/node_modules/@react-native-voice/voice/android/build/.transforms/5efde63f340de6499248b43f411917a1/results.bin b/node_modules/@react-native-voice/voice/android/build/.transforms/5efde63f340de6499248b43f411917a1/results.bin
 new file mode 100644
@@ -105,7 +105,7 @@ index 0000000..9e26dfe
 \ No newline at end of file
 diff --git a/node_modules/@react-native-voice/voice/android/build/intermediates/compile_library_classes_jar/debug/classes.jar b/node_modules/@react-native-voice/voice/android/build/intermediates/compile_library_classes_jar/debug/classes.jar
 new file mode 100644
-index 0000000..bf246a7
+index 0000000..3564808
 Binary files /dev/null and b/node_modules/@react-native-voice/voice/android/build/intermediates/compile_library_classes_jar/debug/classes.jar differ
 diff --git a/node_modules/@react-native-voice/voice/android/build/intermediates/compile_r_class_jar/debug/R.jar b/node_modules/@react-native-voice/voice/android/build/intermediates/compile_r_class_jar/debug/R.jar
 new file mode 100644
@@ -187,7 +187,7 @@ index 0000000..e1d54bd
 Binary files /dev/null and b/node_modules/@react-native-voice/voice/android/build/intermediates/javac/debug/classes/com/wenkesj/voice/VoiceModule$6.class differ
 diff --git a/node_modules/@react-native-voice/voice/android/build/intermediates/javac/debug/classes/com/wenkesj/voice/VoiceModule.class b/node_modules/@react-native-voice/voice/android/build/intermediates/javac/debug/classes/com/wenkesj/voice/VoiceModule.class
 new file mode 100644
-index 0000000..9a58aed
+index 0000000..82f2e8c
 Binary files /dev/null and b/node_modules/@react-native-voice/voice/android/build/intermediates/javac/debug/classes/com/wenkesj/voice/VoiceModule.class differ
 diff --git a/node_modules/@react-native-voice/voice/android/build/intermediates/javac/debug/classes/com/wenkesj/voice/VoicePackage.class b/node_modules/@react-native-voice/voice/android/build/intermediates/javac/debug/classes/com/wenkesj/voice/VoicePackage.class
 new file mode 100644
@@ -256,7 +256,7 @@ index 0000000..0637a08
 \ No newline at end of file
 diff --git a/node_modules/@react-native-voice/voice/android/build/intermediates/runtime_library_classes_jar/debug/classes.jar b/node_modules/@react-native-voice/voice/android/build/intermediates/runtime_library_classes_jar/debug/classes.jar
 new file mode 100644
-index 0000000..fec29ea
+index 0000000..2f85345
 Binary files /dev/null and b/node_modules/@react-native-voice/voice/android/build/intermediates/runtime_library_classes_jar/debug/classes.jar differ
 diff --git a/node_modules/@react-native-voice/voice/android/build/intermediates/symbol_list_with_package_name/debug/package-aware-r.txt b/node_modules/@react-native-voice/voice/android/build/intermediates/symbol_list_with_package_name/debug/package-aware-r.txt
 new file mode 100644
@@ -300,12 +300,44 @@ index 0000000..a2965fc
 +ADDED from E:\kitchin\node_modules\@react-native-voice\voice\android\src\main\AndroidManifest.xml:7:5-67
 +	android:name
 +		ADDED from E:\kitchin\node_modules\@react-native-voice\voice\android\src\main\AndroidManifest.xml:7:22-64
+diff --git a/node_modules/@react-native-voice/voice/android/build/tmp/compileDebugJavaWithJavac/compileTransaction/stash-dir/VoiceModule$1.class.uniqueId5 b/node_modules/@react-native-voice/voice/android/build/tmp/compileDebugJavaWithJavac/compileTransaction/stash-dir/VoiceModule$1.class.uniqueId5
+new file mode 100644
+index 0000000..88630bb
+Binary files /dev/null and b/node_modules/@react-native-voice/voice/android/build/tmp/compileDebugJavaWithJavac/compileTransaction/stash-dir/VoiceModule$1.class.uniqueId5 differ
+diff --git a/node_modules/@react-native-voice/voice/android/build/tmp/compileDebugJavaWithJavac/compileTransaction/stash-dir/VoiceModule$2.class.uniqueId1 b/node_modules/@react-native-voice/voice/android/build/tmp/compileDebugJavaWithJavac/compileTransaction/stash-dir/VoiceModule$2.class.uniqueId1
+new file mode 100644
+index 0000000..238784c
+Binary files /dev/null and b/node_modules/@react-native-voice/voice/android/build/tmp/compileDebugJavaWithJavac/compileTransaction/stash-dir/VoiceModule$2.class.uniqueId1 differ
+diff --git a/node_modules/@react-native-voice/voice/android/build/tmp/compileDebugJavaWithJavac/compileTransaction/stash-dir/VoiceModule$3.class.uniqueId7 b/node_modules/@react-native-voice/voice/android/build/tmp/compileDebugJavaWithJavac/compileTransaction/stash-dir/VoiceModule$3.class.uniqueId7
+new file mode 100644
+index 0000000..0fad4f5
+Binary files /dev/null and b/node_modules/@react-native-voice/voice/android/build/tmp/compileDebugJavaWithJavac/compileTransaction/stash-dir/VoiceModule$3.class.uniqueId7 differ
+diff --git a/node_modules/@react-native-voice/voice/android/build/tmp/compileDebugJavaWithJavac/compileTransaction/stash-dir/VoiceModule$4.class.uniqueId4 b/node_modules/@react-native-voice/voice/android/build/tmp/compileDebugJavaWithJavac/compileTransaction/stash-dir/VoiceModule$4.class.uniqueId4
+new file mode 100644
+index 0000000..a373f66
+Binary files /dev/null and b/node_modules/@react-native-voice/voice/android/build/tmp/compileDebugJavaWithJavac/compileTransaction/stash-dir/VoiceModule$4.class.uniqueId4 differ
+diff --git a/node_modules/@react-native-voice/voice/android/build/tmp/compileDebugJavaWithJavac/compileTransaction/stash-dir/VoiceModule$5.class.uniqueId0 b/node_modules/@react-native-voice/voice/android/build/tmp/compileDebugJavaWithJavac/compileTransaction/stash-dir/VoiceModule$5.class.uniqueId0
+new file mode 100644
+index 0000000..dfd2be6
+Binary files /dev/null and b/node_modules/@react-native-voice/voice/android/build/tmp/compileDebugJavaWithJavac/compileTransaction/stash-dir/VoiceModule$5.class.uniqueId0 differ
+diff --git a/node_modules/@react-native-voice/voice/android/build/tmp/compileDebugJavaWithJavac/compileTransaction/stash-dir/VoiceModule$6.class.uniqueId2 b/node_modules/@react-native-voice/voice/android/build/tmp/compileDebugJavaWithJavac/compileTransaction/stash-dir/VoiceModule$6.class.uniqueId2
+new file mode 100644
+index 0000000..e1d54bd
+Binary files /dev/null and b/node_modules/@react-native-voice/voice/android/build/tmp/compileDebugJavaWithJavac/compileTransaction/stash-dir/VoiceModule$6.class.uniqueId2 differ
+diff --git a/node_modules/@react-native-voice/voice/android/build/tmp/compileDebugJavaWithJavac/compileTransaction/stash-dir/VoiceModule.class.uniqueId6 b/node_modules/@react-native-voice/voice/android/build/tmp/compileDebugJavaWithJavac/compileTransaction/stash-dir/VoiceModule.class.uniqueId6
+new file mode 100644
+index 0000000..9a58aed
+Binary files /dev/null and b/node_modules/@react-native-voice/voice/android/build/tmp/compileDebugJavaWithJavac/compileTransaction/stash-dir/VoiceModule.class.uniqueId6 differ
+diff --git a/node_modules/@react-native-voice/voice/android/build/tmp/compileDebugJavaWithJavac/compileTransaction/stash-dir/VoicePackage.class.uniqueId3 b/node_modules/@react-native-voice/voice/android/build/tmp/compileDebugJavaWithJavac/compileTransaction/stash-dir/VoicePackage.class.uniqueId3
+new file mode 100644
+index 0000000..649224c
+Binary files /dev/null and b/node_modules/@react-native-voice/voice/android/build/tmp/compileDebugJavaWithJavac/compileTransaction/stash-dir/VoicePackage.class.uniqueId3 differ
 diff --git a/node_modules/@react-native-voice/voice/android/build/tmp/compileDebugJavaWithJavac/previous-compilation-data.bin b/node_modules/@react-native-voice/voice/android/build/tmp/compileDebugJavaWithJavac/previous-compilation-data.bin
 new file mode 100644
-index 0000000..e42cec9
+index 0000000..d93b1d1
 Binary files /dev/null and b/node_modules/@react-native-voice/voice/android/build/tmp/compileDebugJavaWithJavac/previous-compilation-data.bin differ
 diff --git a/node_modules/@react-native-voice/voice/android/src/main/java/com/wenkesj/voice/VoiceModule.java b/node_modules/@react-native-voice/voice/android/src/main/java/com/wenkesj/voice/VoiceModule.java
-index f22833e..991881a 100644
+index f22833e..b421607 100644
 --- a/node_modules/@react-native-voice/voice/android/src/main/java/com/wenkesj/voice/VoiceModule.java
 +++ b/node_modules/@react-native-voice/voice/android/src/main/java/com/wenkesj/voice/VoiceModule.java
 @@ -322,8 +322,10 @@ public class VoiceModule extends ReactContextBaseJavaModule implements Recogniti
@@ -320,4 +352,17 @@ index f22833e..991881a 100644
 +      }
      }
  
+     WritableMap event = Arguments.createMap();
+@@ -345,8 +347,10 @@ public class VoiceModule extends ReactContextBaseJavaModule implements Recogniti
+     WritableArray arr = Arguments.createArray();
+ 
+     ArrayList<String> matches = results.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
+-    for (String result : matches) {
+-      arr.pushString(result);
++    if (matches != null) {
++      for (String result : matches) {
++        arr.pushString(result);
++      }
+     }
+  
      WritableMap event = Arguments.createMap();
