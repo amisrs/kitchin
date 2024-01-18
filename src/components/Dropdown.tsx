@@ -1,9 +1,10 @@
 import React, { useRef, useState } from "react";
-import { FlatList, Modal, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { FlatList, Modal, StyleProp, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { Icon } from "react-native-elements"
 import Item from "../data/Item/Item";
 
 interface Props {
+    style: StyleProp<any>;
     label: string;
     data: Array<{ label: string; value: string; }>;
     onSelect: (item: DropdownItem) => void;
@@ -14,7 +15,7 @@ interface DropdownItem {
     value: string;
 }
 
-const Dropdown = ({ label, data, onSelect }: Props) => {
+const Dropdown = ({ style, label, data, onSelect }: Props) => {
     const [visible, setVisible] = useState(false);
     const [dropdownTop, setDropdownTop] = useState(0);
     const [selected, setSelected] = useState<DropdownItem>();
@@ -60,10 +61,9 @@ const Dropdown = ({ label, data, onSelect }: Props) => {
     }
 
     return (
-        <TouchableOpacity ref={dropdownButton} style={styles.button} onPress={toggleDropdown}>
+        <TouchableOpacity ref={dropdownButton} style={style} onPress={toggleDropdown}>
             {renderDropdown()}
             <Text style={styles.buttonText}> {(selected?.label || label)} </Text>
-            <Icon style={styles.icon} type="font-awesome" name="chevron-down" />
         </TouchableOpacity>
     )
 }

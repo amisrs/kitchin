@@ -9,7 +9,7 @@ class ItemRepository implements IRepository<Item> {
     constructor(realm: Realm) {
         this.realm = realm;
     }
-    FindOne(id: string): Item | null {
+    FindOne(id: string | Realm.BSON.ObjectId): Item | null {
         return useObject(Item, id);
     }
     Update(id: string, item: Item): boolean {

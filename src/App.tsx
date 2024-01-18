@@ -8,12 +8,15 @@
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import HomeScreen from './screens/HomeScreen';
+import HomeScreen from './screens/InventoryScreen';
 import Item from './data/Item/Item';
 import { RealmProvider, createRealmContext, useRealm } from '@realm/react';
 import Realm, { schemaVersion } from 'realm';
-import ItemRepository from './data/Item/ItemRepository';
-import ItemUnit from './data/Item/ItemUnit';
+import { Appbar, Icon, MD3DarkTheme, MD3LightTheme, PaperProvider, Portal } from 'react-native-paper';
+import AppBar from './components/AppBar';
+import { createMaterialBottomTabNavigator } from 'react-native-paper/react-navigation';
+import InventoryScreenNavigator from './screens/InventoryScreenNavigator';
+import SettingsScreen from './screens/SettingsScreen';
 
 const Stack = createNativeStackNavigator();
 const realmConfig: Realm.Configuration = {
@@ -22,13 +25,17 @@ const realmConfig: Realm.Configuration = {
 
 function App(): React.JSX.Element {
 
+    const Tab = createMaterialBottomTabNavigator();
     return (
         <RealmProvider schema={[Item]} schemaVersion={2}>
-            <NavigationContainer>
-                <Stack.Navigator>
-                    <Stack.Screen name="Home" component={HomeScreen} />
-                </Stack.Navigator>
-            </NavigationContainer>
+            <PaperProvider theme={MD3LightTheme}>
+                <NavigationContainer>
+                    <Tab.Navigator >
+                        <Tab.Screen name="Inventory" component={InventoryScreenNavigator} options={{tabBarIcon: ({focused, color}) => <Icon color={color} size={24} source={'archive'} />}}/>
+                        <Tab.Screen name="Settings" component={SettingsScreen} />
+                    </Tab.Navigator>
+                </NavigationContainer>
+            </PaperProvider>
         </RealmProvider>
     );
 }
