@@ -5,6 +5,8 @@ import { ITEM_OPERATIONS } from '../../constants';
 class ItemHistoryLine extends Realm.Object<ItemHistoryLine> {
     _id: Realm.BSON.ObjectId = new Realm.BSON.ObjectId();
     itemId: Realm.BSON.ObjectId = new Realm.BSON.ObjectId();
+    quantity: number = 0;
+    unit: string = 'unit';
     date: Date = new Date();
     operation: ITEM_OPERATIONS = ITEM_OPERATIONS.ADD;
     
@@ -13,6 +15,8 @@ class ItemHistoryLine extends Realm.Object<ItemHistoryLine> {
         properties: {
             _id: { type: "objectId", default: () => new Realm.BSON.ObjectId() },
             itemId: { type: "objectId", default: () => new Realm.BSON.ObjectId() },
+            quantity: 'double',
+            unit: 'string',
             date: 'date',
             operation: 'string',
             parent: {

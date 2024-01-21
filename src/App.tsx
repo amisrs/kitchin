@@ -28,7 +28,7 @@ function App(): React.JSX.Element {
 
     const Tab = createMaterialBottomTabNavigator();
     return (
-        <RealmProvider schema={[Item, ItemHistoryLine]} schemaVersion={2}>
+        <RealmProvider schema={[Item, ItemHistoryLine]} deleteRealmIfMigrationNeeded={true} schemaVersion={2}>
             <PaperProvider theme={MD3LightTheme}>
                 <NavigationContainer>
                     <Tab.Navigator >

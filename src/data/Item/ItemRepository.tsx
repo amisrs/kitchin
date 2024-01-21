@@ -3,6 +3,8 @@ import Item from './Item';
 import { IRepository } from '../Repository';
 import Realm from 'realm';
 import ItemUnit from './ItemUnit';
+import ItemHistoryLine from './ItemHistoryLine';
+import { ITEM_OPERATIONS } from '../../constants';
 
 class ItemRepository implements IRepository<Item> {
     readonly realm;
@@ -12,9 +14,54 @@ class ItemRepository implements IRepository<Item> {
     FindOne(id: string | Realm.BSON.ObjectId): Item | null {
         return useObject(Item, id);
     }
-    Update(id: string, item: Item): boolean {
-        throw new Error('Method not implemented.');
+    UpdateOperationAdd(id: string | Realm.BSON.ObjectId, quantity: number, unitName: string): boolean {
+        const item = useObject(Item, id);
+        if (!item) {
+            return false;
+        }
+
+        try {
+            this.realm.write(() => {
+                this.realm.create(ItemHistoryLine.schema.name, {
+                    _id: new Realm.BSON.ObjectId(),
+                    itemId: item._id,
+                    quantity: quantity,
+                    unit: unitName,
+                    operation: ITEM_OPERATIONS.ADD,
+                    date: new Date(),
+                    parent: item
+                });
+            })
+        } catch (error) {
+            return false;
+        }
+        return true;
     }
+
+    UpdateOperationRemove(id: string | Realm.BSON.ObjectId, quantity: number, unitName: string): boolean {
+        const item = useObject(Item, id);
+        if (!item) {
+            return false;
+        }
+
+        try {
+            this.realm.write(() => {
+                this.realm.create(ItemHistoryLine.schema.name, {
+                    _id: new Realm.BSON.ObjectId(),
+                    itemId: item._id,
+                    quantity: quantity,
+                    unit: unitName,
+                    operation: ITEM_OPERATIONS.REMOVE,
+                    date: new Date(),
+                    parent: item
+                });
+            })
+        } catch (error) {
+            return false;
+        }
+        return true;
+    }
+
     Delete(item: Item): boolean {
         try {
             this.realm.write(() => {
