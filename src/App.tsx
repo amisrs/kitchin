@@ -17,6 +17,7 @@ import AppBar from './components/AppBar';
 import { createMaterialBottomTabNavigator } from 'react-native-paper/react-navigation';
 import InventoryScreenNavigator from './screens/InventoryScreenNavigator';
 import SettingsScreen from './screens/SettingsScreen';
+import ItemHistoryLine from './data/Item/ItemHistoryLine';
 
 const Stack = createNativeStackNavigator();
 const realmConfig: Realm.Configuration = {
@@ -27,7 +28,7 @@ function App(): React.JSX.Element {
 
     const Tab = createMaterialBottomTabNavigator();
     return (
-        <RealmProvider schema={[Item]} schemaVersion={2}>
+        <RealmProvider schema={[Item, ItemHistoryLine]} schemaVersion={2}>
             <PaperProvider theme={MD3LightTheme}>
                 <NavigationContainer>
                     <Tab.Navigator >
