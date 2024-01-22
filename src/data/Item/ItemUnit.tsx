@@ -3,10 +3,6 @@ class ItemUnit {
     unitName: string = 'unit';
     unitNamePlural?: string = 'units';
 
-    GetUnitString() {
-        return `${this.quantity.toString()} ${this.quantity != 1 ? this.unitName : this.unitNamePlural}`
-    }
-
     AddQuantity(amountToAdd: number) {
         this.quantity += amountToAdd;
     }

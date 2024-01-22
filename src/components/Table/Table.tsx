@@ -49,7 +49,7 @@ const Table = (props: TableProps) => {
                     <DataTable.Title>Test</DataTable.Title>
                 </DataTable.Header>
 
-                <ScrollView style={styles.scrollContainer}>
+                <ScrollView style={styles.scrollContainer} keyboardShouldPersistTaps={'handled'}>
                     {data.map(item => {
                         return (<TableRow item={item} navigation={navigation} key={item._objectKey()} />)
                     })}

@@ -12,16 +12,20 @@ class ItemRepository implements IRepository<Item> {
         this.realm = realm;
     }
     FindOne(id: string | Realm.BSON.ObjectId): Item | null {
-        return useObject(Item, id);
+        return this.realm.objectForPrimaryKey(Item, id);
     }
     UpdateOperationAdd(id: string | Realm.BSON.ObjectId, quantity: number, unitName: string): boolean {
-        const item = useObject(Item, id);
+        const item = this.realm.objectForPrimaryKey(Item, id);
         if (!item) {
             return false;
         }
 
         try {
             this.realm.write(() => {
+                if (!item.units) {
+                    item.units = new Realm.Dictionary();
+                }
+                item.units.set(unitName, item.units[unitName] + quantity);
                 this.realm.create(ItemHistoryLine.schema.name, {
                     _id: new Realm.BSON.ObjectId(),
                     itemId: item._id,
@@ -39,24 +43,31 @@ class ItemRepository implements IRepository<Item> {
     }
 
     UpdateOperationRemove(id: string | Realm.BSON.ObjectId, quantity: number, unitName: string): boolean {
-        const item = useObject(Item, id);
-        if (!item) {
+        const item = this.realm.objectForPrimaryKey(Item, id);
+        if (!item || !item.units) {
             return false;
         }
-
         try {
             this.realm.write(() => {
-                this.realm.create(ItemHistoryLine.schema.name, {
+                if (Array.from(item.units.keys()).includes(unitName)) {
+                    item.units.set(unitName, item.units[unitName] - quantity);
+                } else {
+                    console.log("Unit not found")
+                    return false;
+                }
+                const newHistory = this.realm.create(ItemHistoryLine.schema.name, {
                     _id: new Realm.BSON.ObjectId(),
-                    itemId: item._id,
                     quantity: quantity,
                     unit: unitName,
                     operation: ITEM_OPERATIONS.REMOVE,
                     date: new Date(),
                     parent: item
-                });
+                }) as ItemHistoryLine;
+
+                item.history.push(newHistory)
             })
         } catch (error) {
+            console.log(error)
             return false;
         }
         return true;
@@ -75,17 +86,48 @@ class ItemRepository implements IRepository<Item> {
     Find(): Realm.Results<Item> {
         return useQuery(Item, items => items);
     }
-    Create({ name, units }: Partial<Item>): boolean {
+    Create({ name, units }: { name: string, units: Map<string, number> }): boolean {
         if (units) {
+            const unit = units.entries().next().value;
+
             try {
+
+                const newObjectId = new Realm.BSON.ObjectId();
+                const newUnits = {
+                    [unit[0]]: unit[1]
+                }
                 this.realm.write(() => {
-                    const result = this.realm.create(Item.schema.name, { name: name, units: Object.fromEntries(units) });
-                    console.log(result)
-                });
+                    this.realm.create(Item.schema.name, {
+                        _id: newObjectId,
+                        name: name,
+                        units: newUnits,
+                        history: []
+                    });
+                    const result = this.realm.objectForPrimaryKey(Item, newObjectId);
+                    if (!result) {
+                        throw Error("Item not found");
+                    }
+
+                    const historyId = new Realm.BSON.ObjectId();
+                    this.realm.create(ItemHistoryLine.schema.name, {
+                        _id: historyId,
+                        quantity: unit[1],
+                        unit: unit[0],
+                        operation: ITEM_OPERATIONS.ADD,
+                        date: new Date(),
+                        parent: result
+                    });
+                    const historyResult = this.realm.objectForPrimaryKey(ItemHistoryLine, historyId);
+                    if (!historyResult) {
+                        throw Error("Item not found");
+                    }
+
+                    result.history.push(historyResult)
+                })
                 return true;
             } catch (error) {
                 console.log(error)
-                return false;
+                throw error;
             }
 
         } else {

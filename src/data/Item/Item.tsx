@@ -5,7 +5,7 @@ import ItemHistoryLine from './ItemHistoryLine';
 class Item extends Realm.Object<Item> {
     _id: Realm.BSON.ObjectId = new Realm.BSON.ObjectId();
     name!: string;
-    units: Map<string, number> = new Map();
+    units: Realm.Dictionary<number> = new Realm.Dictionary();
     history: Realm.List<ItemHistoryLine> = new Realm.List();
 
     static generate(name: string) {

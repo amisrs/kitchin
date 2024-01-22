@@ -6,7 +6,6 @@ import Item from '../data/Item/Item';
 import ItemRepository from '../data/Item/ItemRepository';
 import { useQuery, useRealm } from '@realm/react';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Dropdown from '../components/Dropdown';
 import ItemUnit from '../data/Item/ItemUnit';
 import Voice, { SpeechEndEvent, SpeechErrorEvent, SpeechRecognizedEvent, SpeechResultsEvent, SpeechStartEvent } from '@react-native-voice/voice';
 import WinkNLP from 'wink-nlp';

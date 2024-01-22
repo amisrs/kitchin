@@ -13,16 +13,19 @@ const InventoryDetailScreen = ({ route, navigation }: { route: any, navigation: 
     const repo = new ItemRepository(realm);
     const width = Dimensions.get('window').width;
     const item = repo.FindOne(new Realm.BSON.ObjectId(id));
-
     if (!item) {
         navigation.goBack();
         return null;
     }
-
+    
+    const units = Array.from(item.units.entries());
+    
+    const hasMoreThanOneUnitWithValue = item?.units.size > 1;
     return (
         <View>
             <Surface style={styles.topFragment}>
                 <Text variant="titleLarge">{item.name}</Text>
+                <Text variant="titleMedium">{units[0][1]} {units[0][0]}</Text>
             </Surface>
             <Carousel
                 width={width}
@@ -45,6 +48,7 @@ const InventoryDetailScreen = ({ route, navigation }: { route: any, navigation: 
 }
 
 const renderHistoryPanel = (item: Item) => {
+    console.log(item)
     return (
         <Card>
             <DataTable>

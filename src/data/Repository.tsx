@@ -6,6 +6,6 @@ export interface IRepository<T> {
     UpdateOperationAdd(id: string | Realm.BSON.ObjectId, quantity: number, unitName: string): boolean;
     UpdateOperationRemove(id: string | Realm.BSON.ObjectId, quantity: number, unitName: string): boolean;
 
-    Create(item: Partial<T>): boolean;
+    Create(item: any): boolean;
     Delete(item: T): boolean;
 }

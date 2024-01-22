@@ -2,6 +2,7 @@ import React, { useRef, useState } from "react";
 import { FlatList, Modal, StyleProp, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { Icon } from "react-native-elements"
 import Item from "../data/Item/Item";
+import { Searchbar, TextInput } from "react-native-paper";
 
 interface Props {
     style: StyleProp<any>;
@@ -15,11 +16,12 @@ interface DropdownItem {
     value: string;
 }
 
-const Dropdown = ({ style, label, data, onSelect }: Props) => {
+const SearchDropdown = ({setUnitSearchQuery}: {setUnitSearchQuery: (value: string) => void}) => {
     const [visible, setVisible] = useState(false);
     const [dropdownTop, setDropdownTop] = useState(0);
     const [selected, setSelected] = useState<DropdownItem>();
     const dropdownButton = useRef<TouchableOpacity>(null);
+    const [searchText, setSearchText] = useState("");
 
     const toggleDropdown = () => {
         visible ? setVisible(false) : openDropdown();
@@ -42,7 +44,6 @@ const Dropdown = ({ style, label, data, onSelect }: Props) => {
 
     const onItemPress = (item: DropdownItem) => {
         setSelected(item);
-        onSelect(item);
         setVisible(false);
     }
 
@@ -52,7 +53,7 @@ const Dropdown = ({ style, label, data, onSelect }: Props) => {
                 <Modal visible={visible} transparent animationType="none">
                     <TouchableOpacity style={styles.overlay} onPress={() => setVisible(false)}>
                         <View style={[styles.dropdown, { top: dropdownTop }]}>
-                            <FlatList data={data} renderItem={renderItem} keyExtractor={(item, index) => index.toString()} />
+                            {/* <FlatList data={data} renderItem={renderItem} keyExtractor={(item, index) => index.toString()} /> */}
                         </View>
                     </TouchableOpacity>
                 </Modal>
@@ -61,29 +62,15 @@ const Dropdown = ({ style, label, data, onSelect }: Props) => {
     }
 
     return (
-        <TouchableOpacity ref={dropdownButton} style={style} onPress={toggleDropdown}>
+        <TouchableOpacity ref={dropdownButton} onPress={toggleDropdown} style={{ flex: 1 }}>
             {renderDropdown()}
-            <Text style={styles.buttonText}> {(selected?.label || label)} </Text>
+            {/* <Text style={styles.buttonText}> {(selected?.label || label)} </Text> */}
+            <TextInput value={searchText} onChangeText={(e) => {setSearchText(e); setUnitSearchQuery(e)}} placeholder="Unit"  clearButtonMode='while-editing' />
         </TouchableOpacity>
     )
 }
 
 const styles = StyleSheet.create({
-    button: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: '#efefef',
-        height: 50,
-        zIndex: 1,
-    },
-    buttonText: {
-        flex: 1,
-        textAlign: 'center',
-        color: 'black'
-    },
-    icon: {
-        marginRight: 10,
-    },
     dropdown: {
         position: 'absolute',
         backgroundColor: '#fff',
@@ -108,4 +95,4 @@ const styles = StyleSheet.create({
     }
 });
 
-export default Dropdown;
+export default SearchDropdown;
