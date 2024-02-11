@@ -5,37 +5,49 @@
  * @format
  */
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import HomeScreen from './screens/InventoryScreen';
 import Item from './data/Item/Item';
-import { RealmProvider, createRealmContext, useRealm } from '@realm/react';
-import Realm, { schemaVersion } from 'realm';
-import { Appbar, Icon, MD3DarkTheme, MD3LightTheme, PaperProvider, Portal } from 'react-native-paper';
-import AppBar from './components/AppBar';
+import { RealmProvider } from '@realm/react';
+import { Icon, MD3LightTheme, PaperProvider } from 'react-native-paper';
 import { createMaterialBottomTabNavigator } from 'react-native-paper/react-navigation';
 import InventoryScreenNavigator from './screens/InventoryScreenNavigator';
-import SettingsScreen from './screens/SettingsScreen';
 import ItemHistoryLine from './data/Item/ItemHistoryLine';
+import Space from './data/Space/Space';
+import SpacesScreen from './screens/SpacesScreen';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { Keyboard } from 'react-native';
 
 const Stack = createNativeStackNavigator();
-const realmConfig: Realm.Configuration = {
-    schema: [Item],
-};
 
 function App(): React.JSX.Element {
+    const [isKeyboardOpen, setIsKeyboardOpen] = useState(false);
 
     const Tab = createMaterialBottomTabNavigator();
     return (
-        <RealmProvider schema={[Item, ItemHistoryLine]} deleteRealmIfMigrationNeeded={true} schemaVersion={2}>
+        <RealmProvider schema={[Item, ItemHistoryLine, Space]} deleteRealmIfMigrationNeeded={true} schemaVersion={2}>
             <PaperProvider theme={MD3LightTheme}>
-                <NavigationContainer>
-                    <Tab.Navigator >
-                        <Tab.Screen name="Inventory" component={InventoryScreenNavigator} options={{tabBarIcon: ({focused, color}) => <Icon color={color} size={24} source={'archive'} />}}/>
-                        <Tab.Screen name="Settings" component={SettingsScreen} />
-                    </Tab.Navigator>
-                </NavigationContainer>
+                <SafeAreaProvider>
+                    <NavigationContainer>
+                        <Tab.Navigator
+                            keyboardHidesNavigationBar={true}
+                            barStyle={{position: 'relative'}}
+                        >
+                            <Tab.Screen
+                                name="Inventory"
+                                component={InventoryScreenNavigator}
+                                options={{ tabBarIcon: ({ focused, color }) => <Icon color={color} size={24} source={'playlist-edit'} /> }
+                                }
+                            />
+                            <Tab.Screen
+                                name="Spaces"
+                                component={SpacesScreen}
+                                options={{ tabBarIcon: ({ focused, color }) => <Icon color={color} size={24} source={'wardrobe'} /> }}
+                            />
+                        </Tab.Navigator>
+                    </NavigationContainer>
+                </SafeAreaProvider>
             </PaperProvider>
         </RealmProvider>
     );

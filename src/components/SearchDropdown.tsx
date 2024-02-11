@@ -1,5 +1,5 @@
 import React, { useRef, useState } from "react";
-import { FlatList, Modal, StyleProp, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { FlatList, Modal, NativeSyntheticEvent, StyleProp, StyleSheet, Text, TextInputFocusEventData, TouchableOpacity, View } from "react-native";
 import { Icon } from "react-native-elements"
 import Item from "../data/Item/Item";
 import { Searchbar, TextInput } from "react-native-paper";
@@ -16,7 +16,7 @@ interface DropdownItem {
     value: string;
 }
 
-const SearchDropdown = ({setUnitSearchQuery}: {setUnitSearchQuery: (value: string) => void}) => {
+const SearchDropdown = ({ setUnitSearchQuery, style }: { setUnitSearchQuery: (value: string) => void, style: StyleProp<any> }) => {
     const [visible, setVisible] = useState(false);
     const [dropdownTop, setDropdownTop] = useState(0);
     const [selected, setSelected] = useState<DropdownItem>();
@@ -65,7 +65,13 @@ const SearchDropdown = ({setUnitSearchQuery}: {setUnitSearchQuery: (value: strin
         <TouchableOpacity ref={dropdownButton} onPress={toggleDropdown} style={{ flex: 1 }}>
             {renderDropdown()}
             {/* <Text style={styles.buttonText}> {(selected?.label || label)} </Text> */}
-            <TextInput value={searchText} onChangeText={(e) => {setSearchText(e); setUnitSearchQuery(e)}} placeholder="Unit"  clearButtonMode='while-editing' />
+            <TextInput
+                value={searchText}
+                onChangeText={(e) => { setSearchText(e); setUnitSearchQuery(e) }}
+                placeholder="Unit"
+                clearButtonMode='while-editing'
+                style={style} />
+
         </TouchableOpacity>
     )
 }

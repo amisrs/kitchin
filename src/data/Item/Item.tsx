@@ -1,12 +1,14 @@
 import Realm, { ObjectSchema } from 'realm';
 import ItemUnit from './ItemUnit';
 import ItemHistoryLine from './ItemHistoryLine';
+import Space from '../Space/Space';
 
 class Item extends Realm.Object<Item> {
     _id: Realm.BSON.ObjectId = new Realm.BSON.ObjectId();
     name!: string;
     units: Realm.Dictionary<number> = new Realm.Dictionary();
     history: Realm.List<ItemHistoryLine> = new Realm.List();
+    space?: Space;
 
     static generate(name: string) {
         return {
@@ -21,7 +23,12 @@ class Item extends Realm.Object<Item> {
             _id: { type: "objectId", default: () => new Realm.BSON.ObjectId() },
             name: 'string',
             units: 'double{}',
-            history: 'ItemHistoryLine[]'
+            history: 'ItemHistoryLine[]',
+            space: {
+                type: 'linkingObjects',
+                objectType: 'Space',
+                property: 'items'
+            }
         },
         primaryKey: '_id',
     };

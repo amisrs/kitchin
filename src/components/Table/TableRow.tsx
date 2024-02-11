@@ -1,8 +1,8 @@
-import { LayoutAnimation, Platform, StyleSheet, UIManager, View } from "react-native"
+import { KeyboardAvoidingView, LayoutAnimation, Platform, StyleSheet, UIManager, View } from "react-native"
 import Item from "../../data/Item/Item"
 import { DataTable, IconButton, Portal, Searchbar, Snackbar, Surface, Text, TextInput, useTheme } from "react-native-paper"
 import { NavigationProp } from "@react-navigation/native"
-import { useContext, useEffect, useState } from "react"
+import { useContext, useEffect, useLayoutEffect, useRef, useState } from "react"
 import { TableContext } from "./Table"
 import { TextInput as NativeTextInput } from 'react-native';
 import Animated, { Easing, Keyframe, ReduceMotion, useAnimatedStyle, useSharedValue, withSpring, withTiming } from "react-native-reanimated"
@@ -10,6 +10,7 @@ import SearchDropdown from "../SearchDropdown"
 import { ITEM_OPERATIONS } from "../../constants"
 import { useRealm } from "@realm/react"
 import ItemRepository from "../../data/Item/ItemRepository"
+import { Keyboard } from "react-native"
 
 const TableRow = ({ item, navigation }: { item: Item, navigation: NavigationProp<any> }) => {
     if (Platform.OS === 'android') {
@@ -28,7 +29,8 @@ const TableRow = ({ item, navigation }: { item: Item, navigation: NavigationProp
         },
         rowButtons: {
             flexShrink: 1,
-            flexGrow: 0
+            flexGrow: 0,
+            display: 'flex'
         },
         editPanel: {
             width: '100%',
@@ -39,6 +41,8 @@ const TableRow = ({ item, navigation }: { item: Item, navigation: NavigationProp
             gap: 8,
             zIndex: -1
 
+        },
+        unitText: {
         }
     });
 
@@ -61,15 +65,21 @@ const TableRow = ({ item, navigation }: { item: Item, navigation: NavigationProp
     const repository = new ItemRepository(realm);
     const [snackbarVisible, setSnackbarVisible] = useState(false);
     const [snackbarText, setSnackbarText] = useState('');
-
+    const quantityFieldRef = useRef<NativeTextInput>(null);
     const toggleRowOpened = (flag: boolean) => {
-        LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+        LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut, () => {
+            if (flag) {
+                quantityFieldRef.current?.focus()
+            }
+        });
+
         if (flag) {
             setOpenedRow(item);
             translate.value = (0);
         } else {
             setOpenedRow(null);
             translate.value = (-100);
+            Keyboard.dismiss();
         }
     }
 
@@ -113,12 +123,13 @@ const TableRow = ({ item, navigation }: { item: Item, navigation: NavigationProp
                 }]}>
                 <Surface style={styles.editPanel}>
                     <TextInput
+                        ref={quantityFieldRef}
                         label="Quantity"
                         mode="flat"
                         onChangeText={(value) => setQuantityValue(parseFloat(value))}
                         render={(props) => <NativeTextInput placeholder="Quantity" inputMode="numeric" {...props} />}
                     />
-                    <SearchDropdown setUnitSearchQuery={setUnitSearchQuery} />
+                    <SearchDropdown style={styles.unitText} setUnitSearchQuery={setUnitSearchQuery} />
                     <IconButton
                         icon={'basket-minus'}
                         onPress={() => updateItemQuantity(quantityValue, ITEM_OPERATIONS.REMOVE)}
@@ -133,20 +144,21 @@ const TableRow = ({ item, navigation }: { item: Item, navigation: NavigationProp
     }
 
     return (
-        <Animated.View key={item._objectKey()} style={[rowAnimatedStyles, { display: 'flex', flexDirection: 'column' }]}>
+        <Animated.View key={item._objectKey()} style={[{ display: 'flex', flexDirection: 'column', flex: 1 }]}>
             <View style={{ display: 'flex', flexDirection: 'row' }}>
                 <DataTable.Row style={styles.dataTableRow}
                     onPress={() => navigation.navigate('Inventory', { screen: 'Details', params: { id: item._id.toString() } })}>
                     <DataTable.Cell textStyle={{ color: theme.colors.primary }}>{item.name}</DataTable.Cell>
                     <DataTable.Cell textStyle={{ color: theme.colors.primary }}>{unitString}</DataTable.Cell>
-                    <IconButton icon={openedRow === item ? 'basket-unfill' : 'basket-fill'} onPress={() => toggleRowOpened(openedRow !== item)}></IconButton>
 
+                    {/* <IconButton icon={openedRow === item ? 'basket-unfill' : 'basket-fill'} onPress={() => toggleRowOpened(openedRow !== item)}
+                    ></IconButton> */}
                 </DataTable.Row>
-                {/* <View style={styles.rowButtons}>
-                    <IconButton icon={openedRow === item ? 'basket-unfill' : 'basket-fill'} onPress={() => toggleRowOpened(openedRow !== item)}></IconButton>
-                </View> */}
+                <View style={styles.rowButtons}>
+                    <IconButton style={{ borderRadius: 0, backgroundColor: theme.colors.surface, flex: 1, margin: 0 }} icon={openedRow === item ? 'basket-unfill' : 'basket-fill'} onPress={() => toggleRowOpened(openedRow !== item)}></IconButton>
+                </View>
             </View>
-            {renderEditPanel(item)}
+            {/* {renderEditPanel(item)} */}
             {/* {openedRow === item && (renderEditPanel(item))} */}
             <Snackbar visible={snackbarVisible} onDismiss={() => setSnackbarVisible(false)} action={
                 { label: 'Dismiss', onPress: () => { setSnackbarVisible(false) } }

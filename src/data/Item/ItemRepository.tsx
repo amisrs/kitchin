@@ -5,6 +5,7 @@ import Realm from 'realm';
 import ItemUnit from './ItemUnit';
 import ItemHistoryLine from './ItemHistoryLine';
 import { ITEM_OPERATIONS } from '../../constants';
+import Space from '../Space/Space';
 
 class ItemRepository implements IRepository<Item> {
     readonly realm;
@@ -86,7 +87,7 @@ class ItemRepository implements IRepository<Item> {
     Find(): Realm.Results<Item> {
         return useQuery(Item, items => items);
     }
-    Create({ name, units }: { name: string, units: Map<string, number> }): boolean {
+    Create({ name, units, space }: { name: string, units: Map<string, number>, space?: string | Realm.BSON.ObjectId | null}): boolean {
         if (units) {
             const unit = units.entries().next().value;
 
@@ -96,16 +97,26 @@ class ItemRepository implements IRepository<Item> {
                 const newUnits = {
                     [unit[0]]: unit[1]
                 }
+                let targetSpace: Space | null = null;
+                if (space) {
+                    targetSpace = this.realm.objectForPrimaryKey(Space, Realm.BSON.ObjectID.createFromHexString(space.toString()));
+                }
                 this.realm.write(() => {
                     this.realm.create(Item.schema.name, {
                         _id: newObjectId,
                         name: name,
                         units: newUnits,
-                        history: []
+                        history: [],
+                        ...(targetSpace && { space: targetSpace })
                     });
+
                     const result = this.realm.objectForPrimaryKey(Item, newObjectId);
                     if (!result) {
                         throw Error("Item not found");
+                    }
+
+                    if (targetSpace) {
+                        targetSpace.items.push(result);
                     }
 
                     const historyId = new Realm.BSON.ObjectId();
