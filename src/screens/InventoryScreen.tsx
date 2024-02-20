@@ -1,56 +1,150 @@
-import {useCallback, useEffect, useRef, useState} from 'react';
-import {KeyboardAvoidingView, Platform, StyleSheet, View} from 'react-native';
+import {useCallback, useMemo, useRef, useState} from 'react';
+import {StyleSheet, View} from 'react-native';
 import {
     Text,
     Button,
-    FAB,
-    Modal,
-    Portal,
     TextInput,
-    AnimatedFAB,
     useTheme,
     SegmentedButtons,
+    MD3Theme,
 } from 'react-native-paper';
 import Realm from 'realm';
 import Item from '../data/Item/Item';
 import ItemRepository from '../data/Item/ItemRepository';
-import {useQuery, useRealm} from '@realm/react';
-import {SafeAreaView, useSafeAreaInsets} from 'react-native-safe-area-context';
-import ItemUnit from '../data/Item/ItemUnit';
-import Voice, {
-    SpeechEndEvent,
-    SpeechErrorEvent,
-    SpeechRecognizedEvent,
-    SpeechResultsEvent,
-    SpeechStartEvent,
-} from '@react-native-voice/voice';
-import WinkNLP from 'wink-nlp';
-import model from 'wink-eng-lite-web-model';
+import {useRealm} from '@realm/react';
+import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import Table from '../components/Table/Table';
 import {NavigationProp} from '@react-navigation/native';
-import AppBar from '../components/AppBar';
 import SpaceRepository from '../data/Space/SpaceRepository';
 import DropDownPicker from 'react-native-dropdown-picker';
+import {
+    BottomSheetBackdrop,
+    BottomSheetModal,
+    BottomSheetTextInput,
+} from '@gorhom/bottom-sheet';
+import isTabletDimensions from '../util/isTabletDimensions';
+import Modal from 'react-native-modal';
 const InventoryScreen = ({navigation}: {navigation: NavigationProp<any>}) => {
     const [itemsList, setItemsList] = useState<Realm.Results<Item>>();
+
+    const isTablet = isTabletDimensions();
     const realm = useRealm();
     const itemRepo = new ItemRepository(realm);
     const spaceRepo = new SpaceRepository(realm);
     const items = itemRepo.Find();
 
-    const [isModalVisible, setModalVisible] = useState(false);
-
-    const [name, setName] = useState('');
-    const [quantity, setQuantity] = useState(0);
-    const [unit, setUnit] = useState('');
     const theme = useTheme();
 
+    const bottomSheetRef = useRef<BottomSheetModal>(null);
+    const snapPoints = useMemo(() => ['50%'], []);
+
+    const [tabletModalIsOpen, setTabletModalIsOpen] = useState(false);
+
+    const openMobileModal = useCallback(() => {
+        bottomSheetRef.current?.present();
+    }, []);
+
+    const openTabletModal = () => {
+        setTabletModalIsOpen(true);
+    };
+
+    const insets = useSafeAreaInsets();
+    const styles = makeStyles(theme);
+    return (
+        <View style={{height: '100%', flex: 1}}>
+            <View style={styles.container}>
+                <SegmentedButtons
+                    style={{
+                        width: '100%',
+                        marginBottom: 8,
+                        marginTop: 8,
+                        padding: 8
+                    }}
+                    value={'Storage'}
+                    onValueChange={value => {}}
+                    buttons={[
+                        {
+                            value: 'Spaces',
+                            label: 'Space',
+                            icon: 'wardrobe',
+                        },
+                        {value: 'Tag', label: 'Tag', icon: 'tag'},
+                        {
+                            value: 'Expiry',
+                            label: 'Expiry',
+                            icon: 'calendar-clock',
+                        },
+                    ]}
+                />
+                <Table
+                    data={items.map(item => item)}
+                    setModalVisible={
+                        isTablet ? openTabletModal : openMobileModal
+                    }
+                    navigation={navigation}
+                />
+            </View>
+            {isTablet ? (
+                <Modal
+                    style={{
+                        flex: 1,
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                    }}
+                    useNativeDriver={true}
+                    hideModalContentWhileAnimating={true}
+                    animationIn={'bounceIn'}
+                    animationOut={'bounceOut'}
+                    isVisible={tabletModalIsOpen}
+                    avoidKeyboard={false}
+                    onDismiss={() => {
+                        console.log('dismiss modal');
+                        setTabletModalIsOpen(false);
+                    }}
+                    onBackdropPress={() => setTabletModalIsOpen(false)}>
+                    {renderAddItemComponent(theme, itemRepo, spaceRepo, true)}
+                </Modal>
+            ) : (
+                <BottomSheetModal
+                    style={{
+                        flex: 1,
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                    }}
+                    ref={bottomSheetRef}
+                    index={0}
+                    enablePanDownToClose={true}
+                    snapPoints={snapPoints}
+                    backdropComponent={props => (
+                        <BottomSheetBackdrop
+                            {...props}
+                            appearsOnIndex={0}
+                            disappearsOnIndex={-1}
+                        />
+                    )}
+                    keyboardBlurBehavior="restore"
+                    keyboardBehavior="interactive"
+                    android_keyboardInputMode="adjustPan">
+                    {renderAddItemComponent(theme, itemRepo, spaceRepo, false)}
+                </BottomSheetModal>
+            )}
+        </View>
+    );
+};
+
+const renderAddItemComponent = (
+    theme: MD3Theme,
+    itemRepo: ItemRepository,
+    spaceRepo: SpaceRepository,
+    isTablet: boolean,
+) => {
     const spacesValues = Array.from(spaceRepo.Find().entries()).map(entry => {
         return {label: entry[1].name, value: entry[1]._id.toHexString()};
     });
-    const [selectedSpace, setSelectedSpace] = useState(null);
-    const [spaces, setSpaces] = useState(spacesValues);
-    const [spaceDropdownOpen, setSpaceDropdownOpen] = useState(false);
+    const toggleModal = (toggle: boolean) => {
+        setModalVisible(toggle);
+    };
+    const [isModalVisible, setModalVisible] = useState(false);
 
     const CreateItem = () => {
         itemRepo.Create({
@@ -59,17 +153,123 @@ const InventoryScreen = ({navigation}: {navigation: NavigationProp<any>}) => {
             space: selectedSpace,
         });
     };
+    const [name, setName] = useState('');
+    const [quantity, setQuantity] = useState(0);
+    const [unit, setUnit] = useState('');
 
-    const DeleteItem = (item: Item) => {
-        itemRepo.Delete(item);
-    };
+    const [selectedSpace, setSelectedSpace] = useState(null);
+    const [spaces, setSpaces] = useState(spacesValues);
+    const [spaceDropdownOpen, setSpaceDropdownOpen] = useState(false);
 
-    const toggleModal = (toggle: boolean) => {
-        setModalVisible(toggle);
-    };
+    const styles = makeStyles(theme);
+    return (
+        <View
+            style={{
+                margin: 0,
+                width: isTablet ? '70%' : '100%',
+                padding: 32,
+                backgroundColor: 'white',
+                flexDirection: 'column',
+                gap: 16,
+                borderRadius: theme.roundness,
+            }}>
+            <Text variant="titleLarge">Add an item</Text>
+            <View style={{flexDirection: 'row', gap: 8}}>
+                {isTablet ? (
+                    <TextInput
+                        mode="outlined"
+                        label="Name"
+                        style={{
+                            flex: 2,
+                            color: theme.colors.onPrimaryContainer,
+                        }}
+                        onChangeText={text => setName(text)}
+                    />
+                ) : (
+                    <TextInput
+                        mode="outlined"
+                        label="Name"
+                        style={{
+                            flex: 2,
+                            alignContent: 'center',
+                            justifyContent: 'center',
+                        }}
+                        render={props => (
+                            <BottomSheetTextInput {...(props as any)} />
+                        )}
+                    />
+                )}
+            </View>
+            <View style={{flexDirection: 'row', gap: 8}}>
+                {isTablet ? (
+                    <TextInput
+                        mode="outlined"
+                        label="Quantity"
+                        style={{flex: 1}}
+                        inputMode="numeric"
+                        onChangeText={text =>
+                            setQuantity(parseInt(text.replace(/[^0-9]/g, '')))
+                        }
+                        value={quantity.toString()}
+                    />
+                ) : (
+                    <TextInput
+                        mode="outlined"
+                        label="Quantity"
+                        style={{flex: 1}}
+                        inputMode="numeric"
+                        onChangeText={text => {
+                            const parsedText = parseInt(
+                                text.replace(/[^0-9]/g, ''),
+                            );
+                            setQuantity(isNaN(parsedText) ? 0 : parsedText);
+                        }}
+                        value={quantity.toString()}
+                        render={props => (
+                            <BottomSheetTextInput {...(props as any)} />
+                        )}
+                    />
+                )}
 
-    const insets = useSafeAreaInsets();
-    const styles = StyleSheet.create({
+                <TextInput
+                    mode="outlined"
+                    label="Unit"
+                    placeholder="units"
+                    style={{flex: 1}}
+                    value="units"
+                    onChangeText={text => setUnit(text)}
+                />
+            </View>
+            <View style={{flexDirection: 'row', gap: 8}}>
+                {/* <TextInput mode="outlined" label="Space" style={{ flex: 1 }} inputMode='numeric' onChangeText={(text) => setQuantity(parseInt(text))} /> */}
+                <DropDownPicker
+                    placeholder="Space"
+                    listMode="SCROLLVIEW"
+                    dropDownDirection="AUTO"
+                    value={selectedSpace}
+                    open={spaceDropdownOpen}
+                    items={spaces}
+                    setOpen={setSpaceDropdownOpen}
+                    setValue={setSelectedSpace}
+                    setItems={setSpaces}
+                />
+            </View>
+            <View style={{padding: 8}}>
+                <Button
+                    mode="contained"
+                    onPress={() => {
+                        CreateItem();
+                        toggleModal(false);
+                    }}>
+                    Add
+                </Button>
+            </View>
+        </View>
+    );
+};
+
+const makeStyles = (theme: MD3Theme) =>
+    StyleSheet.create({
         fab: {
             position: 'absolute',
             margin: 16,
@@ -85,105 +285,13 @@ const InventoryScreen = ({navigation}: {navigation: NavigationProp<any>}) => {
         quantityInput: {
             flex: 1,
         },
-        inputContainer: {
-            margin: '10%',
-            padding: 16,
-            backgroundColor: 'white',
-            flexDirection: 'column',
-            gap: 8,
-        },
+        inputContainer: {},
         container: {
             display: 'flex',
-            flexBasis: '100%',
+            height: '100%',
+            padding: 0,
             backgroundColor: theme.colors.surface,
         },
     });
-
-    return (
-        <SafeAreaView style={{flex: 1}}>
-            <View style={styles.container}>
-                <SegmentedButtons
-                    value={'Storage'}
-                    onValueChange={value => {}}
-                    buttons={[
-                        {value: 'Spaces', label: 'Space', icon: 'wardrobe'},
-                        {value: 'Tag', label: 'Tag', icon: 'tag'},
-                        {
-                            value: 'Expiry',
-                            label: 'Expiry',
-                            icon: 'calendar-clock',
-                        },
-                    ]}
-                />
-                <Table
-                    data={items.map(item => item)}
-                    setModalVisible={setModalVisible}
-                    navigation={navigation}
-                />
-            </View>
-            <Modal
-                visible={isModalVisible}
-                onDismiss={() => toggleModal(false)}>
-                <KeyboardAvoidingView
-                    behavior="padding"
-                    style={styles.inputContainer}>
-                    <Text variant="titleLarge">Add an item</Text>
-                    <View style={{flexDirection: 'row', gap: 8}}>
-                        <TextInput
-                            mode="outlined"
-                            label="Item"
-                            style={{flex: 2}}
-                            onChangeText={setName}
-                        />
-                    </View>
-                    <View style={{flexDirection: 'row', gap: 8}}>
-                        <TextInput
-                            mode="outlined"
-                            label="Quantity"
-                            style={{flex: 1}}
-                            inputMode="numeric"
-                            onChangeText={text =>
-                                setQuantity(
-                                    parseInt(text.replace(/[^0-9]/g, '')),
-                                )
-                            }
-                            value={quantity.toString()}
-                        />
-                        <TextInput
-                            mode="outlined"
-                            label="Unit"
-                            style={{flex: 1}}
-                            onChangeText={text => setUnit(text)}
-                        />
-                    </View>
-                    <View style={{flexDirection: 'row', gap: 8}}>
-                        {/* <TextInput mode="outlined" label="Space" style={{ flex: 1 }} inputMode='numeric' onChangeText={(text) => setQuantity(parseInt(text))} /> */}
-                        <DropDownPicker
-                            placeholder="Space"
-                            listMode="SCROLLVIEW"
-                            dropDownDirection="AUTO"
-                            value={selectedSpace}
-                            open={spaceDropdownOpen}
-                            items={spaces}
-                            setOpen={setSpaceDropdownOpen}
-                            setValue={setSelectedSpace}
-                            setItems={setSpaces}
-                        />
-                    </View>
-                    <View style={{padding: 8}}>
-                        <Button
-                            mode="contained"
-                            onPress={() => {
-                                CreateItem();
-                                toggleModal(false);
-                            }}>
-                            Add
-                        </Button>
-                    </View>
-                </KeyboardAvoidingView>
-            </Modal>
-        </SafeAreaView>
-    );
-};
 
 export default InventoryScreen;
