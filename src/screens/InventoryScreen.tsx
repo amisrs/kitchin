@@ -1,4 +1,4 @@
-import {useCallback, useMemo, useRef, useState} from 'react';
+import {RefObject, useCallback, useMemo, useRef, useState} from 'react';
 import {StyleSheet, View} from 'react-native';
 import {
     Text,
@@ -7,6 +7,8 @@ import {
     useTheme,
     SegmentedButtons,
     MD3Theme,
+    FAB,
+    Snackbar,
 } from 'react-native-paper';
 import Realm from 'realm';
 import Item from '../data/Item/Item';
@@ -25,6 +27,12 @@ import {
 import isTabletDimensions from '../util/isTabletDimensions';
 import Modal from 'react-native-modal';
 const InventoryScreen = ({navigation}: {navigation: NavigationProp<any>}) => {
+    // if (Platform.OS === 'android') {
+    //     if (UIManager.setLayoutAnimationEnabledExperimental) {
+    //         UIManager.setLayoutAnimationEnabledExperimental(true);
+    //     }
+    // }
+
     const [itemsList, setItemsList] = useState<Realm.Results<Item>>();
 
     const isTablet = isTabletDimensions();
@@ -39,6 +47,21 @@ const InventoryScreen = ({navigation}: {navigation: NavigationProp<any>}) => {
     const snapPoints = useMemo(() => ['50%'], []);
 
     const [tabletModalIsOpen, setTabletModalIsOpen] = useState(false);
+    const [snackbarVisible, setSnackbarVisible] = useState(false);
+    const [snackbarText, setSnackbarText] = useState('');
+    const showSnackbarWithText = (text: string) => {
+        // LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+        setSnackbarVisible(true);
+        setSnackbarText(text);
+
+        // setTimeout(() => {
+        //     // LayoutAnimation.configureNext(
+        //     //     LayoutAnimation.Presets.easeInEaseOut,
+        //     // );
+
+        //     setSnackbarVisible(false);
+        // }, 2000);
+    };
 
     const openMobileModal = useCallback(() => {
         bottomSheetRef.current?.present();
@@ -58,7 +81,7 @@ const InventoryScreen = ({navigation}: {navigation: NavigationProp<any>}) => {
                         width: '100%',
                         marginBottom: 8,
                         marginTop: 8,
-                        padding: 8
+                        padding: 8,
                     }}
                     value={'Storage'}
                     onValueChange={value => {}}
@@ -78,9 +101,7 @@ const InventoryScreen = ({navigation}: {navigation: NavigationProp<any>}) => {
                 />
                 <Table
                     data={items.map(item => item)}
-                    setModalVisible={
-                        isTablet ? openTabletModal : openMobileModal
-                    }
+                    showSnackBarWithText={showSnackbarWithText}
                     navigation={navigation}
                 />
             </View>
@@ -102,7 +123,13 @@ const InventoryScreen = ({navigation}: {navigation: NavigationProp<any>}) => {
                         setTabletModalIsOpen(false);
                     }}
                     onBackdropPress={() => setTabletModalIsOpen(false)}>
-                    {renderAddItemComponent(theme, itemRepo, spaceRepo, true)}
+                    {renderAddItemComponent(
+                        theme,
+                        itemRepo,
+                        spaceRepo,
+                        true,
+                        showSnackbarWithText,
+                    )}
                 </Modal>
             ) : (
                 <BottomSheetModal
@@ -125,9 +152,73 @@ const InventoryScreen = ({navigation}: {navigation: NavigationProp<any>}) => {
                     keyboardBlurBehavior="restore"
                     keyboardBehavior="interactive"
                     android_keyboardInputMode="adjustPan">
-                    {renderAddItemComponent(theme, itemRepo, spaceRepo, false)}
+                    {renderAddItemComponent(
+                        theme,
+                        itemRepo,
+                        spaceRepo,
+                        false,
+                        showSnackbarWithText,
+                        bottomSheetRef,
+                    )}
                 </BottomSheetModal>
             )}
+            <View
+                style={{
+                    position: 'absolute',
+                    bottom: 0,
+                    right: 0,
+                    width: '100%',
+                }}>
+                <View
+                    style={{
+                        flex: 1,
+                        width: 'auto',
+                        flexDirection: 'row',
+                        alignItems: 'flex-end',
+                    }}>
+                    <View style={{flex: 1, flexGrow: 1}}></View>
+                    <FAB
+                        icon={'plus'}
+                        label={'Add Item'}
+                        style={{
+                            flexShrink: 1,
+                            position: 'relative',
+                            maxWidth: 'auto',
+                            margin: 16,
+                            right: 0,
+                            bottom: 0,
+                        }}
+                        onPress={isTablet ? openTabletModal : openMobileModal}
+                    />
+                </View>
+
+                <View
+                    style={{
+                        flex: 1,
+                        alignItems: 'flex-end',
+                    }}>
+                    <Snackbar
+                        style={{
+                            flex: 1,
+                        }}
+                        wrapperStyle={{
+                            flex: 1,
+                            position: 'relative',
+                            maxWidth: 512,
+                        }}
+                        visible={snackbarVisible}
+                        onDismiss={() => setSnackbarVisible(false)}
+                        duration={2000}
+                        action={{
+                            label: 'Dismiss',
+                            onPress: () => {
+                                setSnackbarVisible(false);
+                            },
+                        }}>
+                        {snackbarText}
+                    </Snackbar>
+                </View>
+            </View>
         </View>
     );
 };
@@ -137,6 +228,8 @@ const renderAddItemComponent = (
     itemRepo: ItemRepository,
     spaceRepo: SpaceRepository,
     isTablet: boolean,
+    showSnackBarWithText: (text: string) => void,
+    modalRef?: RefObject<BottomSheetModal>,
 ) => {
     const spacesValues = Array.from(spaceRepo.Find().entries()).map(entry => {
         return {label: entry[1].name, value: entry[1]._id.toHexString()};
@@ -155,7 +248,7 @@ const renderAddItemComponent = (
     };
     const [name, setName] = useState('');
     const [quantity, setQuantity] = useState(0);
-    const [unit, setUnit] = useState('');
+    const [unit, setUnit] = useState('units');
 
     const [selectedSpace, setSelectedSpace] = useState(null);
     const [spaces, setSpaces] = useState(spacesValues);
@@ -194,6 +287,7 @@ const renderAddItemComponent = (
                             alignContent: 'center',
                             justifyContent: 'center',
                         }}
+                        onChangeText={text => setName(text)}
                         render={props => (
                             <BottomSheetTextInput {...(props as any)} />
                         )}
@@ -260,6 +354,8 @@ const renderAddItemComponent = (
                     onPress={() => {
                         CreateItem();
                         toggleModal(false);
+                        modalRef?.current?.dismiss();
+                        showSnackBarWithText('Added item');
                     }}>
                     Add
                 </Button>

@@ -1,37 +1,24 @@
-import {
-    KeyboardAvoidingView,
-    LayoutAnimation,
-    Platform,
-    StyleSheet,
-    UIManager,
-    View,
-} from 'react-native';
+import {Platform, StyleSheet, UIManager, View} from 'react-native';
 import Item from '../../data/Item/Item';
 import {
     DataTable,
     IconButton,
-    Portal,
-    Searchbar,
-    Snackbar,
     Surface,
     Text,
     TextInput,
     useTheme,
 } from 'react-native-paper';
 import {NavigationProp} from '@react-navigation/native';
-import {useContext, useEffect, useLayoutEffect, useRef, useState} from 'react';
+import {useContext, useEffect, useRef, useState} from 'react';
 import {TableContext} from './Table';
 import {TextInput as NativeTextInput} from 'react-native';
 import Animated, {
     Easing,
-    Keyframe,
     ReduceMotion,
     useAnimatedStyle,
     useSharedValue,
-    withSpring,
     withTiming,
 } from 'react-native-reanimated';
-import SearchDropdown from '../SearchDropdown';
 import {ITEM_OPERATIONS} from '../../constants';
 import {useRealm} from '@realm/react';
 import ItemRepository from '../../data/Item/ItemRepository';
@@ -110,7 +97,7 @@ const TableRow = ({
     const [shouldFocusNextRender, setShouldFocusNextRender] = useState(false);
 
     const [editPanelX, setEditPanelX] = useState(0);
-
+    const isOpenedRow = openedRow !== null && openedRow._id.equals(item._id);
     const toggleRowOpened = (flag: boolean) => {
         if (flag) {
             setOpenedRow(item);
@@ -199,12 +186,13 @@ const TableRow = ({
                     }}>
                     <IconButton
                         icon={'basket-minus'}
-                        onPress={() =>
+                        onPress={() => {
                             updateItemQuantity(
                                 quantityValue,
                                 ITEM_OPERATIONS.REMOVE,
-                            )
-                        }
+                            );
+                            setOpenedRow(null);
+                        }}
                         animated={true}
                         containerColor={theme.colors.error}
                         iconColor="white"
@@ -215,7 +203,7 @@ const TableRow = ({
                         ref={quantityFieldRef}
                         // label={'Quantity'}
                         mode="outlined"
-                        placeholder='Qty'
+                        placeholder="Qty"
                         inputMode="numeric"
                         onChangeText={value =>
                             setQuantityValue(parseFloat(value))
@@ -223,12 +211,13 @@ const TableRow = ({
                     />
                     <IconButton
                         icon={'basket-plus'}
-                        onPress={() =>
+                        onPress={() => {
                             updateItemQuantity(
                                 quantityValue,
                                 ITEM_OPERATIONS.ADD,
-                            )
-                        }
+                            );
+                            setOpenedRow(null);
+                        }}
                         animated={true}
                         containerColor={theme.colors.primary}
                         iconColor="white"
@@ -249,10 +238,9 @@ const TableRow = ({
                         borderTopColor: 'transparent',
                         borderRightColor: 'transparent',
                         borderBottomColor: 'transparent',
-                        borderLeftColor:
-                            openedRow === item
-                                ? theme.colors.surfaceVariant
-                                : 'transparent',
+                        borderLeftColor: isOpenedRow
+                            ? theme.colors.surfaceVariant
+                            : 'transparent',
                     }}
                 />
             </View>
@@ -262,32 +250,28 @@ const TableRow = ({
         <View>
             <Animated.View
                 key={item._objectKey()}
-                style={[
-                    {
-                        display: 'flex',
-                        flexDirection: 'column',
-                        flex: 1,
-                        overflow: 'visible',
-                    },
-                ]}>
-                <View style={{display: 'flex', flexDirection: 'row'}}>
-                    <DataTable.Row
-                        style={styles.dataTableRow}
-                        onPress={() =>
-                            navigation.navigate('Inventory', {
-                                screen: 'Details',
-                                params: {id: item._id.toString()},
-                            })
-                        }>
-                        <DataTable.Cell
-                            textStyle={{color: theme.colors.primary}}>
-                            {item.name}
-                        </DataTable.Cell>
-                        <DataTable.Cell
-                            textStyle={{color: theme.colors.primary}}
-                            style={{
-                                width: '100%',
-                            }}>
+                style={{
+                    display: 'flex',
+                    flexDirection: 'row',
+                    flex: 1,
+                }}>
+                <DataTable.Row
+                    style={styles.dataTableRow}
+                    onPress={() =>
+                        navigation.navigate('Inventory', {
+                            screen: 'Details',
+                            params: {id: item._id.toString()},
+                        })
+                    }>
+                    <DataTable.Cell textStyle={{color: theme.colors.primary}}>
+                        <View style={{flexDirection: 'column', padding: 8}}>
+                            <Text
+                                style={{
+                                    fontWeight: 'bold',
+                                    color: theme.colors.primary,
+                                }}>
+                                {item.name}
+                            </Text>
                             <View
                                 style={{
                                     flex: 1,
@@ -297,35 +281,34 @@ const TableRow = ({
                                 }}>
                                 <Text>{unitString}</Text>
                             </View>
-                        </DataTable.Cell>
-                        <DataTable.Cell
-                            textStyle={{color: theme.colors.primary}}>
-                            <Text>
-                                {item.linkingObjects<Space>(Space, 'items')[0]
-                                    ?.name ?? 'no space'}
-                            </Text>
-                        </DataTable.Cell>
-                    </DataTable.Row>
+                        </View>
+                    </DataTable.Cell>
+                    <DataTable.Cell textStyle={{color: theme.colors.primary}}>
+                        <Text>
+                            {item.linkingObjects<Space>(Space, 'items')[0]
+                                ?.name ?? 'no space'}
+                        </Text>
+                    </DataTable.Cell>
+                </DataTable.Row>
 
-                    <View style={styles.rowButtons}>
-                        <IconButton
-                            style={{
-                                borderRadius: 0,
-                                flex: 1,
-                                margin: 0,
-                            }}
-                            icon={'basket-fill'}
-                            containerColor={
-                                openedRow === item
-                                    ? theme.colors.primaryContainer
-                                    : theme.colors.surface
-                            }
-                            onPress={() => toggleRowOpened(openedRow !== item)}
-                        />
-                    </View>
+                <View style={styles.rowButtons}>
+                    <IconButton
+                        style={{
+                            borderRadius: 0,
+                            flex: 1,
+                            margin: 0,
+                        }}
+                        icon={'basket-fill'}
+                        containerColor={
+                            isOpenedRow
+                                ? theme.colors.primaryContainer
+                                : theme.colors.surface
+                        }
+                        onPress={() => toggleRowOpened(openedRow !== item)}
+                    />
                 </View>
             </Animated.View>
-            {openedRow === item && renderEditPanel(item)}
+            {isOpenedRow && renderEditPanel(item)}
         </View>
     );
 };
