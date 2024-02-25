@@ -1,5 +1,12 @@
-import {RefObject, useCallback, useMemo, useRef, useState} from 'react';
-import {StyleSheet, View} from 'react-native';
+import {
+    RefObject,
+    useCallback,
+    useEffect,
+    useMemo,
+    useRef,
+    useState,
+} from 'react';
+import {Keyboard, StyleSheet, View} from 'react-native';
 import {
     Text,
     Button,
@@ -9,6 +16,7 @@ import {
     MD3Theme,
     FAB,
     Snackbar,
+    Icon,
 } from 'react-native-paper';
 import Realm from 'realm';
 import Item from '../data/Item/Item';
@@ -26,6 +34,18 @@ import {
 } from '@gorhom/bottom-sheet';
 import isTabletDimensions from '../util/isTabletDimensions';
 import Modal from 'react-native-modal';
+import {Dropdown} from 'react-native-element-dropdown';
+import Animated, {
+    SharedValue,
+    interpolate,
+    useAnimatedStyle,
+    useSharedValue,
+} from 'react-native-reanimated';
+
+interface DropdownItem {
+    label: string;
+    value: string;
+}
 const InventoryScreen = ({navigation}: {navigation: NavigationProp<any>}) => {
     // if (Platform.OS === 'android') {
     //     if (UIManager.setLayoutAnimationEnabledExperimental) {
@@ -44,7 +64,16 @@ const InventoryScreen = ({navigation}: {navigation: NavigationProp<any>}) => {
     const theme = useTheme();
 
     const bottomSheetRef = useRef<BottomSheetModal>(null);
-    const snapPoints = useMemo(() => ['50%'], []);
+    const snapPoints = useMemo(() => ['70%'], []);
+    const currentPosition = useSharedValue(0);
+
+    const animatedStyles = useAnimatedStyle(() => {
+        const scale = interpolate(currentPosition.value, [100, 500], [1, 2]);
+
+        return {
+            transform: [{translateY: scale}],
+        };
+    });
 
     const [tabletModalIsOpen, setTabletModalIsOpen] = useState(false);
     const [snackbarVisible, setSnackbarVisible] = useState(false);
@@ -142,6 +171,7 @@ const InventoryScreen = ({navigation}: {navigation: NavigationProp<any>}) => {
                     index={0}
                     enablePanDownToClose={true}
                     snapPoints={snapPoints}
+                    animatedPosition={currentPosition}
                     backdropComponent={props => (
                         <BottomSheetBackdrop
                             {...props}
@@ -159,6 +189,8 @@ const InventoryScreen = ({navigation}: {navigation: NavigationProp<any>}) => {
                         false,
                         showSnackbarWithText,
                         bottomSheetRef,
+                        currentPosition,
+                        animatedStyles,
                     )}
                 </BottomSheetModal>
             )}
@@ -230,10 +262,15 @@ const renderAddItemComponent = (
     isTablet: boolean,
     showSnackBarWithText: (text: string) => void,
     modalRef?: RefObject<BottomSheetModal>,
+    currentPosition?: SharedValue<number>,
+    animatedStyles?: any,
 ) => {
     const spacesValues = Array.from(spaceRepo.Find().entries()).map(entry => {
         return {label: entry[1].name, value: entry[1]._id.toHexString()};
     });
+    spacesValues.unshift({label: 'None', value: 'n'});
+    spacesValues.unshift({label: 'None', value: 'n'});
+    spacesValues.unshift({label: 'None', value: 'n'});
     const toggleModal = (toggle: boolean) => {
         setModalVisible(toggle);
     };
@@ -242,7 +279,9 @@ const renderAddItemComponent = (
     const CreateItem = () => {
         itemRepo.Create({
             name: name,
-            units: new Map<string, number>([[unit, quantity]]),
+            units: new Map<string, number>([
+                [unit === '' ? 'units' : unit, quantity],
+            ]),
             space: selectedSpace,
         });
     };
@@ -250,10 +289,26 @@ const renderAddItemComponent = (
     const [quantity, setQuantity] = useState(0);
     const [unit, setUnit] = useState('units');
 
-    const [selectedSpace, setSelectedSpace] = useState(null);
+    const [selectedSpace, setSelectedSpace] = useState<string | null>(null);
     const [spaces, setSpaces] = useState(spacesValues);
     const [spaceDropdownOpen, setSpaceDropdownOpen] = useState(false);
+    const [isKeyboardOpen, setIsKeyboardOpen] = useState(false);
+    const [dropdownContainerOffset, setDropdownContainerOffset] = useState(0);
+    const [baseOffsetValue, setBaseOffsetValue] = useState(0);
 
+    useEffect(() => {
+        const showSubscription = Keyboard.addListener('keyboardDidShow', () => {
+            setIsKeyboardOpen(true);
+        });
+        const hideSubscription = Keyboard.addListener('keyboardDidHide', () => {
+            setIsKeyboardOpen(false);
+        });
+
+        return () => {
+            showSubscription.remove();
+            hideSubscription.remove();
+        };
+    }, []);
     const styles = makeStyles(theme);
     return (
         <View
@@ -264,7 +319,7 @@ const renderAddItemComponent = (
                 backgroundColor: 'white',
                 flexDirection: 'column',
                 gap: 16,
-                borderRadius: theme.roundness,
+                borderRadius: 8,
             }}>
             <Text variant="titleLarge">Add an item</Text>
             <View style={{flexDirection: 'row', gap: 8}}>
@@ -305,6 +360,7 @@ const renderAddItemComponent = (
                             setQuantity(parseInt(text.replace(/[^0-9]/g, '')))
                         }
                         value={quantity.toString()}
+                        selectTextOnFocus
                     />
                 ) : (
                     <TextInput
@@ -322,32 +378,102 @@ const renderAddItemComponent = (
                         render={props => (
                             <BottomSheetTextInput {...(props as any)} />
                         )}
+                        selectTextOnFocus
                     />
                 )}
-
-                <TextInput
-                    mode="outlined"
-                    label="Unit"
-                    placeholder="units"
-                    style={{flex: 1}}
-                    value="units"
-                    onChangeText={text => setUnit(text)}
-                />
+                {isTablet ? (
+                    <TextInput
+                        mode="outlined"
+                        label="Unit"
+                        placeholder="units"
+                        style={{flex: 1}}
+                        onChangeText={text => setUnit(text)}
+                    />
+                ) : (
+                    <TextInput
+                        mode="outlined"
+                        label="Unit"
+                        placeholder="units"
+                        style={{flex: 1}}
+                        onChangeText={text => setUnit(text)}
+                        render={props => (
+                            <BottomSheetTextInput {...(props as any)} />
+                        )}
+                    />
+                )}
+                {/* <Text>{dropdownContainerOffset}</Text> */}
             </View>
-            <View style={{flexDirection: 'row', gap: 8}}>
-                {/* <TextInput mode="outlined" label="Space" style={{ flex: 1 }} inputMode='numeric' onChangeText={(text) => setQuantity(parseInt(text))} /> */}
-                <DropDownPicker
-                    placeholder="Space"
-                    listMode="SCROLLVIEW"
-                    dropDownDirection="AUTO"
+            <Animated.View style={[{flexDirection: 'row'}, animatedStyles]}>
+                <Dropdown
+                    style={{
+                        height: 50,
+                        borderColor: theme.colors.outline,
+                        borderWidth: 1,
+                        borderRadius: theme.roundness,
+                        paddingHorizontal: 16,
+                        width: '100%',
+                    }}
+                    selectedTextStyle={{
+                        color: theme.colors.onPrimaryContainer,
+                    }}
+                    placeholderStyle={{
+                        color: theme.colors.secondary,
+                    }}
+                    containerStyle={{
+                        top: isTablet ? 0 : -15 + dropdownContainerOffset,
+                        borderWidth: 1,
+                        borderRadius: theme.roundness,
+                    }}
+                    keyboardAvoiding={true}
+                    showsVerticalScrollIndicator={true}
+                    searchPlaceholder="Search..."
+                    search={spaces.length > 5}
+                    data={spaces}
+                    maxHeight={240}
+                    labelField="label"
+                    valueField="value"
+                    placeholder="Select a space"
                     value={selectedSpace}
-                    open={spaceDropdownOpen}
-                    items={spaces}
-                    setOpen={setSpaceDropdownOpen}
-                    setValue={setSelectedSpace}
-                    setItems={setSpaces}
+                    onChange={space => {
+                        setSelectedSpace(space.value);
+                    }}
+                    onFocus={() => {
+                        // Hack to get dropdown to show up offset if opened whilst keyboard is open
+                        // if (!isKeyboardOpen) {
+                        //     setBaseOffsetValue(currentPosition?.value || 0);
+                        // }
+                        // setDropdownContainerOffset(
+                        //     isKeyboardOpen ? baseOffsetValue || 0 : 0,
+                        // );
+                    }}
+                    renderItem={item => {
+                        return (
+                            <View
+                                style={{
+                                    padding: 16,
+                                    flexDirection: 'row',
+                                    justifyContent: 'space-between',
+                                    alignItems: 'center',
+                                }}>
+                                <Text
+                                    style={{
+                                        color: theme.colors.primary,
+                                        ...theme.fonts.bodyLarge,
+                                    }}>
+                                    {item.label}
+                                </Text>
+                                {item.value === selectedSpace ? (
+                                    <Icon
+                                        size={24}
+                                        source={'check'}
+                                        color={theme.colors.primary}
+                                    />
+                                ) : null}
+                            </View>
+                        );
+                    }}
                 />
-            </View>
+            </Animated.View>
             <View style={{padding: 8}}>
                 <Button
                     mode="contained"

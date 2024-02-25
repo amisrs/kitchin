@@ -28,6 +28,11 @@ class Item extends Realm.Object<Item> {
                 type: 'linkingObjects',
                 objectType: 'Space',
                 property: 'items'
+            },
+            tags: {
+                type: 'linkingObjects',
+                objectType: 'ItemTag',
+                property: 'items'
             }
         },
         primaryKey: '_id',

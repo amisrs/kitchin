@@ -20,6 +20,7 @@ import {SafeAreaProvider} from 'react-native-safe-area-context';
 import {Keyboard} from 'react-native';
 import {GestureHandlerRootView} from 'react-native-gesture-handler';
 import {BottomSheetModalProvider} from '@gorhom/bottom-sheet';
+import ItemTag from './data/Item/ItemTag';
 
 const Stack = createNativeStackNavigator();
 
@@ -29,7 +30,7 @@ function App(): React.JSX.Element {
     const Tab = createMaterialBottomTabNavigator();
     return (
         <RealmProvider
-            schema={[Item, ItemHistoryLine, Space]}
+            schema={[Item, ItemHistoryLine, ItemTag, Space]}
             deleteRealmIfMigrationNeeded={true}
             schemaVersion={2}>
             <PaperProvider theme={MD3LightTheme}>

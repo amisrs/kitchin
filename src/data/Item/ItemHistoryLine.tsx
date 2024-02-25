@@ -1,6 +1,6 @@
-import Realm, { ObjectSchema } from 'realm';
+import Realm, {ObjectSchema} from 'realm';
 import ItemUnit from './ItemUnit';
-import { ITEM_OPERATIONS } from '../../constants';
+import {ITEM_OPERATIONS} from '../../constants';
 import Item from './Item';
 
 class ItemHistoryLine extends Realm.Object<ItemHistoryLine> {
@@ -10,11 +10,11 @@ class ItemHistoryLine extends Realm.Object<ItemHistoryLine> {
     date: Date = new Date();
     operation: ITEM_OPERATIONS = ITEM_OPERATIONS.ADD;
     parent: Item = {} as Item;
-    
+
     static schema: ObjectSchema = {
         name: 'ItemHistoryLine',
         properties: {
-            _id: { type: "objectId", default: () => new Realm.BSON.ObjectId() },
+            _id: {type: 'objectId', default: () => new Realm.BSON.ObjectId()},
             quantity: 'double',
             unit: 'string',
             date: 'date',
@@ -22,8 +22,8 @@ class ItemHistoryLine extends Realm.Object<ItemHistoryLine> {
             parent: {
                 type: 'linkingObjects',
                 objectType: 'Item',
-                property: 'history'
-            }
+                property: 'history',
+            },
         },
         primaryKey: '_id',
     };
