@@ -17,12 +17,12 @@ import {
     FAB,
     Snackbar,
     Icon,
+    TouchableRipple,
 } from 'react-native-paper';
 import Realm from 'realm';
 import Item from '../data/Item/Item';
 import ItemRepository from '../data/Item/ItemRepository';
 import {useRealm} from '@realm/react';
-import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import Table from '../components/Table/Table';
 import {NavigationProp} from '@react-navigation/native';
 import SpaceRepository from '../data/Space/SpaceRepository';
@@ -41,7 +41,6 @@ import Animated, {
     useAnimatedStyle,
     useSharedValue,
 } from 'react-native-reanimated';
-
 interface DropdownItem {
     label: string;
     value: string;
@@ -100,7 +99,6 @@ const InventoryScreen = ({navigation}: {navigation: NavigationProp<any>}) => {
         setTabletModalIsOpen(true);
     };
 
-    const insets = useSafeAreaInsets();
     const styles = makeStyles(theme);
     return (
         <View style={{height: '100%', flex: 1}}>
@@ -158,6 +156,7 @@ const InventoryScreen = ({navigation}: {navigation: NavigationProp<any>}) => {
                         spaceRepo,
                         true,
                         showSnackbarWithText,
+                        navigation,
                     )}
                 </Modal>
             ) : (
@@ -188,6 +187,7 @@ const InventoryScreen = ({navigation}: {navigation: NavigationProp<any>}) => {
                         spaceRepo,
                         false,
                         showSnackbarWithText,
+                        navigation,
                         bottomSheetRef,
                         currentPosition,
                         animatedStyles,
@@ -261,6 +261,7 @@ const renderAddItemComponent = (
     spaceRepo: SpaceRepository,
     isTablet: boolean,
     showSnackBarWithText: (text: string) => void,
+    navigation: NavigationProp<any>,
     modalRef?: RefObject<BottomSheetModal>,
     currentPosition?: SharedValue<number>,
     animatedStyles?: any,
@@ -323,85 +324,116 @@ const renderAddItemComponent = (
             }}>
             <Text variant="titleLarge">Add an item</Text>
             <View style={{flexDirection: 'row', gap: 8}}>
-                {isTablet ? (
-                    <TextInput
-                        mode="outlined"
-                        label="Name"
-                        style={{
-                            flex: 2,
-                            color: theme.colors.onPrimaryContainer,
-                        }}
-                        onChangeText={text => setName(text)}
+                <TouchableRipple
+                    onPress={() =>
+                        navigation.navigate('Inventory', {
+                            screen: 'Camera',
+                        })
+                    }
+                    style={{
+                        borderColor: theme.colors.outline,
+                        borderStyle: 'dashed',
+                        borderWidth: 2,
+                        borderRadius: 8,
+                        minHeight: 100,
+                        flexGrow: 0,
+                        aspectRatio: 1,
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                    }}>
+                    <Icon
+                        size={48}
+                        source={'camera-plus'}
+                        color={theme.colors.outline}
                     />
-                ) : (
-                    <TextInput
-                        mode="outlined"
-                        label="Name"
-                        style={{
-                            flex: 2,
-                            alignContent: 'center',
-                            justifyContent: 'center',
-                        }}
-                        onChangeText={text => setName(text)}
-                        render={props => (
-                            <BottomSheetTextInput {...(props as any)} />
+                </TouchableRipple>
+                <View style={{flex: 1}}>
+                    <View style={{flexDirection: 'row', gap: 8}}>
+                        {isTablet ? (
+                            <TextInput
+                                mode="outlined"
+                                label="Name"
+                                style={{
+                                    flex: 2,
+                                    color: theme.colors.onPrimaryContainer,
+                                }}
+                                onChangeText={text => setName(text)}
+                            />
+                        ) : (
+                            <TextInput
+                                mode="outlined"
+                                label="Name"
+                                style={{
+                                    flex: 2,
+                                    alignContent: 'center',
+                                    justifyContent: 'center',
+                                }}
+                                onChangeText={text => setName(text)}
+                                render={props => (
+                                    <BottomSheetTextInput {...(props as any)} />
+                                )}
+                            />
                         )}
-                    />
-                )}
-            </View>
-            <View style={{flexDirection: 'row', gap: 8}}>
-                {isTablet ? (
-                    <TextInput
-                        mode="outlined"
-                        label="Quantity"
-                        style={{flex: 1}}
-                        inputMode="numeric"
-                        onChangeText={text =>
-                            setQuantity(parseInt(text.replace(/[^0-9]/g, '')))
-                        }
-                        value={quantity.toString()}
-                        selectTextOnFocus
-                    />
-                ) : (
-                    <TextInput
-                        mode="outlined"
-                        label="Quantity"
-                        style={{flex: 1}}
-                        inputMode="numeric"
-                        onChangeText={text => {
-                            const parsedText = parseInt(
-                                text.replace(/[^0-9]/g, ''),
-                            );
-                            setQuantity(isNaN(parsedText) ? 0 : parsedText);
-                        }}
-                        value={quantity.toString()}
-                        render={props => (
-                            <BottomSheetTextInput {...(props as any)} />
+                    </View>
+                    <View style={{flexDirection: 'row', gap: 8}}>
+                        {isTablet ? (
+                            <TextInput
+                                mode="outlined"
+                                label="Quantity"
+                                style={{flex: 1}}
+                                inputMode="numeric"
+                                onChangeText={text =>
+                                    setQuantity(
+                                        parseInt(text.replace(/[^0-9]/g, '')),
+                                    )
+                                }
+                                value={quantity.toString()}
+                                selectTextOnFocus
+                            />
+                        ) : (
+                            <TextInput
+                                mode="outlined"
+                                label="Quantity"
+                                style={{flex: 1}}
+                                inputMode="numeric"
+                                onChangeText={text => {
+                                    const parsedText = parseInt(
+                                        text.replace(/[^0-9]/g, ''),
+                                    );
+                                    setQuantity(
+                                        isNaN(parsedText) ? 0 : parsedText,
+                                    );
+                                }}
+                                value={quantity.toString()}
+                                render={props => (
+                                    <BottomSheetTextInput {...(props as any)} />
+                                )}
+                                selectTextOnFocus
+                            />
                         )}
-                        selectTextOnFocus
-                    />
-                )}
-                {isTablet ? (
-                    <TextInput
-                        mode="outlined"
-                        label="Unit"
-                        placeholder="units"
-                        style={{flex: 1}}
-                        onChangeText={text => setUnit(text)}
-                    />
-                ) : (
-                    <TextInput
-                        mode="outlined"
-                        label="Unit"
-                        placeholder="units"
-                        style={{flex: 1}}
-                        onChangeText={text => setUnit(text)}
-                        render={props => (
-                            <BottomSheetTextInput {...(props as any)} />
+                        {isTablet ? (
+                            <TextInput
+                                mode="outlined"
+                                label="Unit"
+                                placeholder="units"
+                                style={{flex: 1}}
+                                onChangeText={text => setUnit(text)}
+                            />
+                        ) : (
+                            <TextInput
+                                mode="outlined"
+                                label="Unit"
+                                placeholder="units"
+                                style={{flex: 1}}
+                                onChangeText={text => setUnit(text)}
+                                render={props => (
+                                    <BottomSheetTextInput {...(props as any)} />
+                                )}
+                            />
                         )}
-                    />
-                )}
-                {/* <Text>{dropdownContainerOffset}</Text> */}
+                        {/* <Text>{dropdownContainerOffset}</Text> */}
+                    </View>
+                </View>
             </View>
             <Animated.View style={[{flexDirection: 'row'}, animatedStyles]}>
                 <Dropdown
