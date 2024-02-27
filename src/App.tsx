@@ -21,6 +21,7 @@ import {Keyboard} from 'react-native';
 import {GestureHandlerRootView} from 'react-native-gesture-handler';
 import {BottomSheetModalProvider} from '@gorhom/bottom-sheet';
 import ItemTag from './data/Item/ItemTag';
+import { useCameraPermission } from 'react-native-vision-camera';
 
 const Stack = createNativeStackNavigator();
 

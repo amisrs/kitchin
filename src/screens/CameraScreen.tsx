@@ -6,6 +6,8 @@ import {
 
 const CameraScreen = () => {
     const {hasPermission, requestPermission} = useCameraPermission();
+    const device = useCameraDevice('back');
+
     if (!hasPermission) {
         requestPermission()
             .then(value => {
@@ -17,15 +19,11 @@ const CameraScreen = () => {
                 console.log(error);
             });
     }
-    if (hasPermission) {
-        const device = useCameraDevice('back');
-        if (device == null) {
-            return null;
-        }
-        return <Camera device={device} isActive={true} />;
-    } else {
+
+    if (device == null) {
         return null;
     }
+    return <Camera style={{flex: 1}} device={device} isActive={true} />;
 };
 
 export default CameraScreen;
