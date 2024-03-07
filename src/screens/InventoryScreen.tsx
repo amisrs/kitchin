@@ -1,6 +1,7 @@
 import {
     RefObject,
     useCallback,
+    useContext,
     useEffect,
     useMemo,
     useRef,
@@ -41,6 +42,10 @@ import Animated, {
     useAnimatedStyle,
     useSharedValue,
 } from 'react-native-reanimated';
+import {AddItemModal} from '../components/AddItemModal';
+import {CameraContext} from '../components/Camera/CameraContext';
+import {PhotoFile} from 'react-native-vision-camera';
+import {AddItemModalContext} from '../components/AddItemModalContext';
 interface DropdownItem {
     label: string;
     value: string;
@@ -63,7 +68,7 @@ const InventoryScreen = ({navigation}: {navigation: NavigationProp<any>}) => {
     const theme = useTheme();
 
     const bottomSheetRef = useRef<BottomSheetModal>(null);
-    const snapPoints = useMemo(() => ['70%'], []);
+    const snapPoints = useMemo(() => ['10%', '70%'], []);
     const currentPosition = useSharedValue(0);
 
     const animatedStyles = useAnimatedStyle(() => {
@@ -73,10 +78,14 @@ const InventoryScreen = ({navigation}: {navigation: NavigationProp<any>}) => {
             transform: [{translateY: scale}],
         };
     });
-
+    const [photo, setPhoto] = useState<PhotoFile | null>(null);
+    const [isCameraActive, setIsCameraActive] = useState(false);
     const [tabletModalIsOpen, setTabletModalIsOpen] = useState(false);
+    const [mobileModalIsOpen, setMobileModalIsOpen] = useState(false);
     const [snackbarVisible, setSnackbarVisible] = useState(false);
     const [snackbarText, setSnackbarText] = useState('');
+
+    const {isModalActive, setIsModalActive} = useContext(AddItemModalContext);
     const showSnackbarWithText = (text: string) => {
         // LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
         setSnackbarVisible(true);
@@ -91,17 +100,19 @@ const InventoryScreen = ({navigation}: {navigation: NavigationProp<any>}) => {
         // }, 2000);
     };
 
-    const openMobileModal = useCallback(() => {
-        bottomSheetRef.current?.present();
-    }, []);
-
     const openTabletModal = () => {
         setTabletModalIsOpen(true);
     };
 
     const styles = makeStyles(theme);
     return (
-        <View style={{height: '100%', flex: 1}}>
+        <View
+            style={{
+                height: '100%',
+                flex: 1,
+                borderWidth: 1,
+                borderColor: 'cyan',
+            }}>
             <View style={styles.container}>
                 <SegmentedButtons
                     style={{
@@ -132,68 +143,21 @@ const InventoryScreen = ({navigation}: {navigation: NavigationProp<any>}) => {
                     navigation={navigation}
                 />
             </View>
-            {isTablet ? (
-                <Modal
-                    style={{
-                        flex: 1,
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                    }}
-                    useNativeDriver={true}
-                    hideModalContentWhileAnimating={true}
-                    animationIn={'bounceIn'}
-                    animationOut={'bounceOut'}
-                    isVisible={tabletModalIsOpen}
-                    avoidKeyboard={false}
-                    onDismiss={() => {
-                        console.log('dismiss modal');
-                        setTabletModalIsOpen(false);
-                    }}
-                    onBackdropPress={() => setTabletModalIsOpen(false)}>
-                    {renderAddItemComponent(
-                        theme,
-                        itemRepo,
-                        spaceRepo,
-                        true,
-                        showSnackbarWithText,
-                        navigation,
-                    )}
-                </Modal>
-            ) : (
-                <BottomSheetModal
-                    style={{
-                        flex: 1,
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                    }}
-                    ref={bottomSheetRef}
-                    index={0}
-                    enablePanDownToClose={true}
-                    snapPoints={snapPoints}
-                    animatedPosition={currentPosition}
-                    backdropComponent={props => (
-                        <BottomSheetBackdrop
-                            {...props}
-                            appearsOnIndex={0}
-                            disappearsOnIndex={-1}
-                        />
-                    )}
-                    keyboardBlurBehavior="restore"
-                    keyboardBehavior="interactive"
-                    android_keyboardInputMode="adjustPan">
-                    {renderAddItemComponent(
-                        theme,
-                        itemRepo,
-                        spaceRepo,
-                        false,
-                        showSnackbarWithText,
-                        navigation,
-                        bottomSheetRef,
-                        currentPosition,
-                        animatedStyles,
-                    )}
-                </BottomSheetModal>
-            )}
+            <AddItemModal
+                theme={theme}
+                itemRepo={itemRepo}
+                spaceRepo={spaceRepo}
+                isTablet={isTablet}
+                tabletModalIsOpen={tabletModalIsOpen}
+                setTabletModalIsOpen={setTabletModalIsOpen}
+                mobileModalIsOpen={mobileModalIsOpen}
+                setMobileModalIsOpen={setMobileModalIsOpen}
+                showSnackBarWithText={showSnackbarWithText}
+                navigation={navigation}
+                animatedStyles={animatedStyles}
+            />
+            {/* <Overlay /> */}
+
             <View
                 style={{
                     position: 'absolute',
@@ -220,7 +184,11 @@ const InventoryScreen = ({navigation}: {navigation: NavigationProp<any>}) => {
                             right: 0,
                             bottom: 0,
                         }}
-                        onPress={isTablet ? openTabletModal : openMobileModal}
+                        onPress={
+                            isTablet
+                                ? () => setIsModalActive(true)
+                                : () => setMobileModalIsOpen(true)
+                        }
                     />
                 </View>
 
@@ -250,273 +218,6 @@ const InventoryScreen = ({navigation}: {navigation: NavigationProp<any>}) => {
                         {snackbarText}
                     </Snackbar>
                 </View>
-            </View>
-        </View>
-    );
-};
-
-const renderAddItemComponent = (
-    theme: MD3Theme,
-    itemRepo: ItemRepository,
-    spaceRepo: SpaceRepository,
-    isTablet: boolean,
-    showSnackBarWithText: (text: string) => void,
-    navigation: NavigationProp<any>,
-    modalRef?: RefObject<BottomSheetModal>,
-    currentPosition?: SharedValue<number>,
-    animatedStyles?: any,
-) => {
-    const spacesValues = Array.from(spaceRepo.Find().entries()).map(entry => {
-        return {label: entry[1].name, value: entry[1]._id.toHexString()};
-    });
-    spacesValues.unshift({label: 'None', value: 'n'});
-    spacesValues.unshift({label: 'None', value: 'n'});
-    spacesValues.unshift({label: 'None', value: 'n'});
-    const toggleModal = (toggle: boolean) => {
-        setModalVisible(toggle);
-    };
-    const [isModalVisible, setModalVisible] = useState(false);
-
-    const CreateItem = () => {
-        itemRepo.Create({
-            name: name,
-            units: new Map<string, number>([
-                [unit === '' ? 'units' : unit, quantity],
-            ]),
-            space: selectedSpace,
-        });
-    };
-    const [name, setName] = useState('');
-    const [quantity, setQuantity] = useState(0);
-    const [unit, setUnit] = useState('units');
-
-    const [selectedSpace, setSelectedSpace] = useState<string | null>(null);
-    const [spaces, setSpaces] = useState(spacesValues);
-    const [spaceDropdownOpen, setSpaceDropdownOpen] = useState(false);
-    const [isKeyboardOpen, setIsKeyboardOpen] = useState(false);
-    const [dropdownContainerOffset, setDropdownContainerOffset] = useState(0);
-    const [baseOffsetValue, setBaseOffsetValue] = useState(0);
-
-    useEffect(() => {
-        const showSubscription = Keyboard.addListener('keyboardDidShow', () => {
-            setIsKeyboardOpen(true);
-        });
-        const hideSubscription = Keyboard.addListener('keyboardDidHide', () => {
-            setIsKeyboardOpen(false);
-        });
-
-        return () => {
-            showSubscription.remove();
-            hideSubscription.remove();
-        };
-    }, []);
-    const styles = makeStyles(theme);
-    return (
-        <View
-            style={{
-                margin: 0,
-                width: isTablet ? '70%' : '100%',
-                padding: 32,
-                backgroundColor: 'white',
-                flexDirection: 'column',
-                gap: 16,
-                borderRadius: 8,
-            }}>
-            <Text variant="titleLarge">Add an item</Text>
-            <View style={{flexDirection: 'row', gap: 8}}>
-                <TouchableRipple
-                    onPress={() =>
-                        navigation.navigate('Inventory', {
-                            screen: 'Camera',
-                        })
-                    }
-                    style={{
-                        borderColor: theme.colors.outline,
-                        borderStyle: 'dashed',
-                        borderWidth: 2,
-                        borderRadius: 8,
-                        minHeight: 100,
-                        flexGrow: 0,
-                        aspectRatio: 1,
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                    }}>
-                    <Icon
-                        size={48}
-                        source={'camera-plus'}
-                        color={theme.colors.outline}
-                    />
-                </TouchableRipple>
-                <View style={{flex: 1}}>
-                    <View style={{flexDirection: 'row', gap: 8}}>
-                        {isTablet ? (
-                            <TextInput
-                                mode="outlined"
-                                label="Name"
-                                style={{
-                                    flex: 2,
-                                    color: theme.colors.onPrimaryContainer,
-                                }}
-                                onChangeText={text => setName(text)}
-                            />
-                        ) : (
-                            <TextInput
-                                mode="outlined"
-                                label="Name"
-                                style={{
-                                    flex: 2,
-                                    alignContent: 'center',
-                                    justifyContent: 'center',
-                                }}
-                                onChangeText={text => setName(text)}
-                                render={props => (
-                                    <BottomSheetTextInput {...(props as any)} />
-                                )}
-                            />
-                        )}
-                    </View>
-                    <View style={{flexDirection: 'row', gap: 8}}>
-                        {isTablet ? (
-                            <TextInput
-                                mode="outlined"
-                                label="Quantity"
-                                style={{flex: 1}}
-                                inputMode="numeric"
-                                onChangeText={text =>
-                                    setQuantity(
-                                        parseInt(text.replace(/[^0-9]/g, '')),
-                                    )
-                                }
-                                value={quantity.toString()}
-                                selectTextOnFocus
-                            />
-                        ) : (
-                            <TextInput
-                                mode="outlined"
-                                label="Quantity"
-                                style={{flex: 1}}
-                                inputMode="numeric"
-                                onChangeText={text => {
-                                    const parsedText = parseInt(
-                                        text.replace(/[^0-9]/g, ''),
-                                    );
-                                    setQuantity(
-                                        isNaN(parsedText) ? 0 : parsedText,
-                                    );
-                                }}
-                                value={quantity.toString()}
-                                render={props => (
-                                    <BottomSheetTextInput {...(props as any)} />
-                                )}
-                                selectTextOnFocus
-                            />
-                        )}
-                        {isTablet ? (
-                            <TextInput
-                                mode="outlined"
-                                label="Unit"
-                                placeholder="units"
-                                style={{flex: 1}}
-                                onChangeText={text => setUnit(text)}
-                            />
-                        ) : (
-                            <TextInput
-                                mode="outlined"
-                                label="Unit"
-                                placeholder="units"
-                                style={{flex: 1}}
-                                onChangeText={text => setUnit(text)}
-                                render={props => (
-                                    <BottomSheetTextInput {...(props as any)} />
-                                )}
-                            />
-                        )}
-                        {/* <Text>{dropdownContainerOffset}</Text> */}
-                    </View>
-                </View>
-            </View>
-            <Animated.View style={[{flexDirection: 'row'}, animatedStyles]}>
-                <Dropdown
-                    style={{
-                        height: 50,
-                        borderColor: theme.colors.outline,
-                        borderWidth: 1,
-                        borderRadius: theme.roundness,
-                        paddingHorizontal: 16,
-                        width: '100%',
-                    }}
-                    selectedTextStyle={{
-                        color: theme.colors.onPrimaryContainer,
-                    }}
-                    placeholderStyle={{
-                        color: theme.colors.secondary,
-                    }}
-                    containerStyle={{
-                        top: isTablet ? 0 : -15 + dropdownContainerOffset,
-                        borderWidth: 1,
-                        borderRadius: theme.roundness,
-                    }}
-                    keyboardAvoiding={true}
-                    showsVerticalScrollIndicator={true}
-                    searchPlaceholder="Search..."
-                    search={spaces.length > 5}
-                    data={spaces}
-                    maxHeight={240}
-                    labelField="label"
-                    valueField="value"
-                    placeholder="Select a space"
-                    value={selectedSpace}
-                    onChange={space => {
-                        setSelectedSpace(space.value);
-                    }}
-                    onFocus={() => {
-                        // Hack to get dropdown to show up offset if opened whilst keyboard is open
-                        // if (!isKeyboardOpen) {
-                        //     setBaseOffsetValue(currentPosition?.value || 0);
-                        // }
-                        // setDropdownContainerOffset(
-                        //     isKeyboardOpen ? baseOffsetValue || 0 : 0,
-                        // );
-                    }}
-                    renderItem={item => {
-                        return (
-                            <View
-                                style={{
-                                    padding: 16,
-                                    flexDirection: 'row',
-                                    justifyContent: 'space-between',
-                                    alignItems: 'center',
-                                }}>
-                                <Text
-                                    style={{
-                                        color: theme.colors.primary,
-                                        ...theme.fonts.bodyLarge,
-                                    }}>
-                                    {item.label}
-                                </Text>
-                                {item.value === selectedSpace ? (
-                                    <Icon
-                                        size={24}
-                                        source={'check'}
-                                        color={theme.colors.primary}
-                                    />
-                                ) : null}
-                            </View>
-                        );
-                    }}
-                />
-            </Animated.View>
-            <View style={{padding: 8}}>
-                <Button
-                    mode="contained"
-                    onPress={() => {
-                        CreateItem();
-                        toggleModal(false);
-                        modalRef?.current?.dismiss();
-                        showSnackBarWithText('Added item');
-                    }}>
-                    Add
-                </Button>
             </View>
         </View>
     );

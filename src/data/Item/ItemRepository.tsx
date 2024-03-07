@@ -1,10 +1,10 @@
-import { useObject, useQuery, useRealm } from '@realm/react';
+import {useObject, useQuery, useRealm} from '@realm/react';
 import Item from './Item';
-import { IRepository } from '../Repository';
+import {IRepository} from '../Repository';
 import Realm from 'realm';
 import ItemUnit from './ItemUnit';
 import ItemHistoryLine from './ItemHistoryLine';
-import { ITEM_OPERATIONS } from '../../constants';
+import {ITEM_OPERATIONS} from '../../constants';
 import Space from '../Space/Space';
 
 class ItemRepository implements IRepository<Item> {
@@ -15,7 +15,11 @@ class ItemRepository implements IRepository<Item> {
     FindOne(id: string | Realm.BSON.ObjectId): Item | null {
         return this.realm.objectForPrimaryKey(Item, id);
     }
-    UpdateOperationAdd(id: string | Realm.BSON.ObjectId, quantity: number, unitName: string): boolean {
+    UpdateOperationAdd(
+        id: string | Realm.BSON.ObjectId,
+        quantity: number,
+        unitName: string,
+    ): boolean {
         const item = this.realm.objectForPrimaryKey(Item, id);
         if (!item) {
             return false;
@@ -34,16 +38,20 @@ class ItemRepository implements IRepository<Item> {
                     unit: unitName,
                     operation: ITEM_OPERATIONS.ADD,
                     date: new Date(),
-                    parent: item
+                    parent: item,
                 });
-            })
+            });
         } catch (error) {
             return false;
         }
         return true;
     }
 
-    UpdateOperationRemove(id: string | Realm.BSON.ObjectId, quantity: number, unitName: string): boolean {
+    UpdateOperationRemove(
+        id: string | Realm.BSON.ObjectId,
+        quantity: number,
+        unitName: string,
+    ): boolean {
         const item = this.realm.objectForPrimaryKey(Item, id);
         if (!item || !item.units) {
             return false;
@@ -53,22 +61,25 @@ class ItemRepository implements IRepository<Item> {
                 if (Array.from(item.units.keys()).includes(unitName)) {
                     item.units.set(unitName, item.units[unitName] - quantity);
                 } else {
-                    console.log("Unit not found")
+                    console.log('Unit not found');
                     return false;
                 }
-                const newHistory = this.realm.create(ItemHistoryLine.schema.name, {
-                    _id: new Realm.BSON.ObjectId(),
-                    quantity: quantity,
-                    unit: unitName,
-                    operation: ITEM_OPERATIONS.REMOVE,
-                    date: new Date(),
-                    parent: item
-                }) as ItemHistoryLine;
+                const newHistory = this.realm.create(
+                    ItemHistoryLine.schema.name,
+                    {
+                        _id: new Realm.BSON.ObjectId(),
+                        quantity: quantity,
+                        unit: unitName,
+                        operation: ITEM_OPERATIONS.REMOVE,
+                        date: new Date(),
+                        parent: item,
+                    },
+                ) as ItemHistoryLine;
 
-                item.history.push(newHistory)
-            })
+                item.history.push(newHistory);
+            });
         } catch (error) {
-            console.log(error)
+            console.log(error);
             return false;
         }
         return true;
@@ -78,7 +89,7 @@ class ItemRepository implements IRepository<Item> {
         try {
             this.realm.write(() => {
                 this.realm.delete(item);
-            })
+            });
             return true;
         } catch (error) {
             return false;
@@ -87,19 +98,46 @@ class ItemRepository implements IRepository<Item> {
     Find(): Realm.Results<Item> {
         return useQuery(Item, items => items);
     }
-    Create({ name, units, space }: { name: string, units: Map<string, number>, space?: string | Realm.BSON.ObjectId | null}): boolean {
+    Create({
+        name,
+        units,
+        space,
+    }: {
+        name: string;
+        units: Map<string, number>;
+        space?: string | Realm.BSON.ObjectId | null;
+    }): boolean {
         if (units) {
             const unit = units.entries().next().value;
 
             try {
-
                 const newObjectId = new Realm.BSON.ObjectId();
                 const newUnits = {
-                    [unit[0]]: unit[1]
-                }
+                    [unit[0]]: unit[1],
+                };
                 let targetSpace: Space | null = null;
                 if (space) {
-                    targetSpace = this.realm.objectForPrimaryKey(Space, Realm.BSON.ObjectID.createFromHexString(space.toString()));
+                    if (typeof space === 'string') {
+                        if (space === 'n') {
+                            targetSpace = null;
+                        } else {
+                            targetSpace = this.realm.objectForPrimaryKey(
+                                Space,
+                                Realm.BSON.ObjectID.createFromHexString(space),
+                            );
+                            if (!targetSpace) {
+                                throw Error('Space not found');
+                            }
+                        }
+                    } else {
+                        targetSpace = this.realm.objectForPrimaryKey(
+                            Space,
+                            space,
+                        );
+                        if (!targetSpace) {
+                            throw Error('Space not found');
+                        }
+                    }
                 }
                 this.realm.write(() => {
                     this.realm.create(Item.schema.name, {
@@ -107,12 +145,16 @@ class ItemRepository implements IRepository<Item> {
                         name: name,
                         units: newUnits,
                         history: [],
-                        ...(targetSpace && { space: targetSpace })
+                        imagePath: '',
+                        ...(targetSpace && {space: targetSpace}),
                     });
 
-                    const result = this.realm.objectForPrimaryKey(Item, newObjectId);
+                    const result = this.realm.objectForPrimaryKey(
+                        Item,
+                        newObjectId,
+                    );
                     if (!result) {
-                        throw Error("Item not found");
+                        throw Error('Item not found');
                     }
 
                     if (targetSpace) {
@@ -126,21 +168,23 @@ class ItemRepository implements IRepository<Item> {
                         unit: unit[0],
                         operation: ITEM_OPERATIONS.ADD,
                         date: new Date(),
-                        parent: result
+                        parent: result,
                     });
-                    const historyResult = this.realm.objectForPrimaryKey(ItemHistoryLine, historyId);
+                    const historyResult = this.realm.objectForPrimaryKey(
+                        ItemHistoryLine,
+                        historyId,
+                    );
                     if (!historyResult) {
-                        throw Error("Item not found");
+                        throw Error('Item not found');
                     }
 
-                    result.history.push(historyResult)
-                })
+                    result.history.push(historyResult);
+                });
                 return true;
             } catch (error) {
-                console.log(error)
+                console.log(error);
                 throw error;
             }
-
         } else {
             console.log(`no unit`);
             return false;
