@@ -1,6 +1,7 @@
 import {
     Button,
     Icon,
+    IconButton,
     MD3Theme,
     Text,
     TextInput,
@@ -24,22 +25,24 @@ import {
     useRef,
     useState,
 } from 'react';
-import {Keyboard, View, StyleSheet, Pressable} from 'react-native';
+import {Keyboard, View, StyleSheet, Pressable, Image} from 'react-native';
 import {Dropdown} from 'react-native-element-dropdown';
 import Modal from 'react-native-modal';
 import {CameraContext} from './Camera/CameraContext';
 import CameraScreen from '../screens/CameraScreen';
 import {AddItemModalContext} from './AddItemModalContext';
-
+import {
+    DocumentDirectoryPath,
+    copyFile,
+    exists,
+    mkdir,
+    writeFile,
+} from '@dr.pogodin/react-native-fs';
 export const AddItemModal = ({
     theme,
     itemRepo,
     spaceRepo,
     isTablet,
-    tabletModalIsOpen,
-    setTabletModalIsOpen,
-    mobileModalIsOpen,
-    setMobileModalIsOpen,
     showSnackBarWithText,
     navigation,
     animatedStyles,
@@ -50,22 +53,13 @@ export const AddItemModal = ({
     isTablet: boolean;
     showSnackBarWithText: (text: string) => void;
     navigation: NavigationProp<any>;
-    tabletModalIsOpen: boolean;
-    setTabletModalIsOpen: (open: boolean) => void;
-    mobileModalIsOpen: boolean;
-    setMobileModalIsOpen: (open: boolean) => void;
     animatedStyles?: any;
 }) => {
     const spacesValues = Array.from(spaceRepo.Find().entries()).map(entry => {
         return {label: entry[1].name, value: entry[1]._id.toHexString()};
     });
     spacesValues.unshift({label: 'None', value: 'n'});
-    const toggleModal = (toggle: boolean) => {
-        setModalVisible(toggle);
-    };
-    const [isModalVisible, setModalVisible] = useState(false);
-
-    const CreateItem = () => {
+    const CreateItem = async () => {
         const result = itemRepo.Create({
             name: addItemName,
             units: new Map<string, number>([
@@ -74,17 +68,28 @@ export const AddItemModal = ({
             space: addItemSpace,
         });
         if (result) {
+            if (photo) {
+                if (!(await exists(`${DocumentDirectoryPath}/photos`))) {
+                    mkdir(`${DocumentDirectoryPath}/photos`);
+                }
+                await copyFile(
+                    photo?.path,
+                    `${DocumentDirectoryPath}/photos/${result.toString()}.jpg`,
+                );
+            }
+
             showSnackBarWithText(`Added ${addItemName} to inventory`);
             setIsModalActive(false);
             setAddItemName('');
             setAddItemQuantity(0);
             setAddItemUnit('');
             setAddItemSpace(null);
+            setPhoto(null);
         } else {
             // TODO: Error state
         }
     };
-    const modalRef = useRef<BottomSheetModal>(null);
+    const tempRef = useRef<BottomSheetModal>(null);
 
     const snapPoints = useMemo(() => ['10%', '70%'], []);
 
@@ -105,16 +110,9 @@ export const AddItemModal = ({
         setAddItemQuantity,
         setAddItemUnit,
         setAddItemSpace,
+        modalRef,
+        setModalRef,
     } = useContext(AddItemModalContext);
-
-    const openMobileModal = useCallback(() => {
-        modalRef?.current?.present();
-        modalRef?.current?.snapToIndex(1);
-    }, []);
-
-    const openTabletModal = () => {
-        setTabletModalIsOpen(true);
-    };
 
     useEffect(() => {
         const showSubscription = Keyboard.addListener('keyboardDidShow', () => {
@@ -124,19 +122,15 @@ export const AddItemModal = ({
             setIsKeyboardOpen(false);
         });
 
-        if (isTablet && tabletModalIsOpen) {
-            openTabletModal();
-        }
-
-        if (!isTablet && mobileModalIsOpen) {
-            openMobileModal();
-        }
-
         return () => {
             showSubscription.remove();
             hideSubscription.remove();
         };
-    }, [tabletModalIsOpen, mobileModalIsOpen]);
+    }, []);
+
+    useEffect(() => {
+        setModalRef(tempRef);
+    }, [tempRef]);
     const styles = makeStyles(theme);
 
     const renderAddItemForm = (isTablet: boolean) => {
@@ -146,8 +140,6 @@ export const AddItemModal = ({
                     <View
                         style={{
                             gap: 16,
-                            borderColor: 'magenta',
-                            borderWidth: 4,
                         }}>
                         <Text variant="titleLarge">Add an item</Text>
                         <View style={{flexDirection: 'row', gap: 16}}>
@@ -167,11 +159,38 @@ export const AddItemModal = ({
                                     justifyContent: 'center',
                                     alignItems: 'center',
                                 }}>
-                                <Icon
-                                    size={48}
-                                    source={'camera-plus'}
-                                    color={theme.colors.outline}
-                                />
+                                <View>
+                                    {photo !== null && (
+                                        <>
+                                            <Image
+                                                width={100}
+                                                height={100}
+                                                borderRadius={8}
+                                                source={{
+                                                    uri: `file://${photo?.path}`,
+                                                }}
+                                            />
+                                            <IconButton
+                                                style={{
+                                                    position: 'absolute',
+                                                    top: 0,
+                                                    right: 0,
+                                                }}
+                                                size={16}
+                                                mode="contained"
+                                                icon={'close'}
+                                                onPress={() => setPhoto(null)}
+                                            />
+                                        </>
+                                    )}
+                                    {photo === null && (
+                                        <Icon
+                                            size={48}
+                                            source={'camera-plus'}
+                                            color={theme.colors.outline}
+                                        />
+                                    )}
+                                </View>
                             </TouchableRipple>
                             <View style={{flex: 1, gap: 16}}>
                                 <View style={{flexDirection: 'row', gap: 16}}>
@@ -298,8 +317,7 @@ export const AddItemModal = ({
                                 mode="contained"
                                 onPress={() => {
                                     CreateItem();
-                                    // toggleModal(false);
-                                    // modalRef?.current?.dismiss();
+                                    setIsModalActive(false);
                                 }}>
                                 Add
                             </Button>
@@ -319,11 +337,10 @@ export const AddItemModal = ({
                         <Text variant="titleLarge">Add an item</Text>
                         <View style={{flexDirection: 'row', gap: 8}}>
                             <TouchableRipple
-                                onPress={() =>
-                                    navigation.navigate('Inventory', {
-                                        screen: 'Camera',
-                                    })
-                                }
+                                onPress={() => {
+                                    setIsCameraActive(true);
+                                    setIsModalActive(false);
+                                }}
                                 style={{
                                     borderColor: theme.colors.outline,
                                     borderStyle: 'dashed',
@@ -335,11 +352,38 @@ export const AddItemModal = ({
                                     justifyContent: 'center',
                                     alignItems: 'center',
                                 }}>
-                                <Icon
-                                    size={48}
-                                    source={'camera-plus'}
-                                    color={theme.colors.outline}
-                                />
+                                <View>
+                                    {photo !== null && (
+                                        <>
+                                            <Image
+                                                width={100}
+                                                height={100}
+                                                borderRadius={8}
+                                                source={{
+                                                    uri: `file://${photo?.path}`,
+                                                }}
+                                            />
+                                            <IconButton
+                                                style={{
+                                                    position: 'absolute',
+                                                    top: 0,
+                                                    right: 0,
+                                                }}
+                                                size={16}
+                                                mode="contained"
+                                                icon={'close'}
+                                                onPress={() => setPhoto(null)}
+                                            />
+                                        </>
+                                    )}
+                                    {photo === null && (
+                                        <Icon
+                                            size={48}
+                                            source={'camera-plus'}
+                                            color={theme.colors.outline}
+                                        />
+                                    )}
+                                </View>
                             </TouchableRipple>
                             <View style={{flex: 1}}>
                                 <View style={{flexDirection: 'row', gap: 8}}>
@@ -354,6 +398,7 @@ export const AddItemModal = ({
                                         onChangeText={text =>
                                             setAddItemName(text)
                                         }
+                                        value={addItemName}
                                         render={props => (
                                             <BottomSheetTextInput
                                                 {...(props as any)}
@@ -393,6 +438,7 @@ export const AddItemModal = ({
                                         onChangeText={text =>
                                             setAddItemUnit(text)
                                         }
+                                        value={addItemUnit}
                                         render={props => (
                                             <BottomSheetTextInput
                                                 {...(props as any)}
@@ -482,8 +528,7 @@ export const AddItemModal = ({
                                 mode="contained"
                                 onPress={() => {
                                     CreateItem();
-                                    toggleModal(false);
-                                    modalRef?.current?.dismiss();
+                                    setIsModalActive(false);
                                     showSnackBarWithText('Added item');
                                 }}>
                                 Add
@@ -538,11 +583,10 @@ export const AddItemModal = ({
                     coverScreen={true}
                     onDismiss={() => {
                         console.log('dismiss modal');
-                        setTabletModalIsOpen!(false);
+                        setIsModalActive(false);
                         setIsCameraActive(false);
                     }}
                     onBackdropPress={() => {
-                        setTabletModalIsOpen!(false);
                         setIsCameraActive(false);
                         setIsModalActive(false);
                         console.log('backdrop pressed');
@@ -554,8 +598,6 @@ export const AddItemModal = ({
                             // height: 'auto',
                             // justifyContent: 'center',
                             // alignItems: 'center',
-                            borderColor: 'red',
-                            borderWidth: 2,
                         }}>
                         <View
                             style={{
@@ -564,8 +606,6 @@ export const AddItemModal = ({
                                 backgroundColor: 'white',
                                 flexDirection: 'column',
                                 gap: 16,
-                                borderColor: 'green',
-                                borderWidth: 4,
                                 borderRadius: 8,
                             }}>
                             {renderAddItemForm(isTablet)}
@@ -591,7 +631,7 @@ export const AddItemModal = ({
                             disappearsOnIndex={-1}
                         />
                     )}
-                    onDismiss={() => setMobileModalIsOpen(false)}
+                    onDismiss={() => setIsModalActive(false)}
                     keyboardBlurBehavior="restore"
                     keyboardBehavior="interactive"
                     android_keyboardInputMode="adjustPan">

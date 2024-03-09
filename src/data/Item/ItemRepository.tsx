@@ -106,7 +106,7 @@ class ItemRepository implements IRepository<Item> {
         name: string;
         units: Map<string, number>;
         space?: string | Realm.BSON.ObjectId | null;
-    }): boolean {
+    }): Realm.BSON.ObjectId {
         if (units) {
             const unit = units.entries().next().value;
 
@@ -180,14 +180,13 @@ class ItemRepository implements IRepository<Item> {
 
                     result.history.push(historyResult);
                 });
-                return true;
+                return newObjectId;
             } catch (error) {
                 console.log(error);
                 throw error;
             }
         } else {
-            console.log(`no unit`);
-            return false;
+            throw Error('no unit');
         }
     }
 }

@@ -148,10 +148,6 @@ const InventoryScreen = ({navigation}: {navigation: NavigationProp<any>}) => {
                 itemRepo={itemRepo}
                 spaceRepo={spaceRepo}
                 isTablet={isTablet}
-                tabletModalIsOpen={tabletModalIsOpen}
-                setTabletModalIsOpen={setTabletModalIsOpen}
-                mobileModalIsOpen={mobileModalIsOpen}
-                setMobileModalIsOpen={setMobileModalIsOpen}
                 showSnackBarWithText={showSnackbarWithText}
                 navigation={navigation}
                 animatedStyles={animatedStyles}
@@ -184,11 +180,7 @@ const InventoryScreen = ({navigation}: {navigation: NavigationProp<any>}) => {
                             right: 0,
                             bottom: 0,
                         }}
-                        onPress={
-                            isTablet
-                                ? () => setIsModalActive(true)
-                                : () => setMobileModalIsOpen(true)
-                        }
+                        onPress={() => setIsModalActive(true)}
                     />
                 </View>
 

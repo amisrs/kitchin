@@ -5,7 +5,7 @@
  * @format
  */
 
-import React, {useEffect, useState} from 'react';
+import React, {RefObject, useEffect, useState} from 'react';
 import {NavigationContainer} from '@react-navigation/native';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import Item from './data/Item/Item';
@@ -19,12 +19,15 @@ import SpacesScreen from './screens/SpacesScreen';
 import {SafeAreaProvider} from 'react-native-safe-area-context';
 import {Keyboard} from 'react-native';
 import {GestureHandlerRootView} from 'react-native-gesture-handler';
-import {BottomSheetModalProvider} from '@gorhom/bottom-sheet';
+import {BottomSheetModal, BottomSheetModalProvider} from '@gorhom/bottom-sheet';
 import ItemTag from './data/Item/ItemTag';
 import {PhotoFile, useCameraPermission} from 'react-native-vision-camera';
 import {CameraContext} from './components/Camera/CameraContext';
 import CameraScreen from './screens/CameraScreen';
-import {AddItemModalContext} from './components/AddItemModalContext';
+import {
+    AddItemModalContext,
+    AddItemModalContextProvider,
+} from './components/AddItemModalContext';
 
 const Stack = createNativeStackNavigator();
 
@@ -32,12 +35,6 @@ function App(): React.JSX.Element {
     const [isKeyboardOpen, setIsKeyboardOpen] = useState(false);
     const [photo, setPhoto] = useState<PhotoFile | null>(null);
     const [isCameraActive, setIsCameraActive] = useState(false);
-    const [isModalActive, setIsModalActive] = useState(false);
-    const [addItemName, setAddItemName] = useState('');
-    const [addItemQuantity, setAddItemQuantity] = useState(0);
-    const [addItemUnit, setAddItemUnit] = useState('');
-    const [addItemSpace, setAddItemSpace] = useState<string | null>(null);
-    const [addItemTags, setAddItemTags] = useState<string[]>([]);
 
     const Tab = createMaterialBottomTabNavigator();
     return (
@@ -56,19 +53,7 @@ function App(): React.JSX.Element {
                                     isCameraActive,
                                     setIsCameraActive,
                                 }}>
-                                <AddItemModalContext.Provider
-                                    value={{
-                                        isModalActive,
-                                        setIsModalActive,
-                                        addItemName,
-                                        setAddItemName,
-                                        addItemQuantity,
-                                        setAddItemQuantity,
-                                        addItemUnit,
-                                        setAddItemUnit,
-                                        addItemSpace,
-                                        setAddItemSpace,
-                                    }}>
+                                <AddItemModalContextProvider>
                                     <CameraScreen />
                                     <NavigationContainer>
                                         <Tab.Navigator
@@ -112,7 +97,7 @@ function App(): React.JSX.Element {
                                             />
                                         </Tab.Navigator>
                                     </NavigationContainer>
-                                </AddItemModalContext.Provider>
+                                </AddItemModalContextProvider>
                             </CameraContext.Provider>
                         </BottomSheetModalProvider>
                     </GestureHandlerRootView>

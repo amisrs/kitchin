@@ -9,7 +9,7 @@ import {CaptureButton} from '../components/Camera/CaptureButton';
 import {useCallback, useContext, useRef, useState} from 'react';
 import {useSharedValue} from 'react-native-reanimated';
 import {StyleSheet, View} from 'react-native';
-import {Button, IconButton} from 'react-native-paper';
+import {Button, IconButton, useTheme} from 'react-native-paper';
 import {CameraContext} from '../components/Camera/CameraContext';
 import {AddItemModalContext} from '../components/AddItemModalContext';
 
@@ -18,7 +18,9 @@ const CameraScreen = () => {
     const device = useCameraDevice('back');
     const camera = useRef<Camera>(null);
     const zoom = useSharedValue(1);
-    const {isCameraActive, setIsCameraActive} = useContext(CameraContext);
+    const theme = useTheme();
+    const {isCameraActive, setIsCameraActive, photo, setPhoto} =
+        useContext(CameraContext);
     const {isModalActive, setIsModalActive} = useContext(AddItemModalContext);
 
     const [isCameraInitialized, setIsCameraInitialized] = useState(false);
@@ -53,11 +55,8 @@ const CameraScreen = () => {
                 flex: 1,
                 // height: 800,
                 width: 'auto',
+                backgroundColor: theme.colors.surface,
                 zIndex: 99999,
-                borderRadius: 4,
-                backgroundColor: 'green',
-
-                borderColor: 'red',
                 display: isCameraActive ? 'flex' : 'none',
                 overflow: 'hidden',
                 justifyContent: 'center',
@@ -66,10 +65,11 @@ const CameraScreen = () => {
             <Camera
                 style={[
                     {
-                        borderRadius: 16,
-                        borderColor: 'red',
+                        position: 'relative',
+                        // borderRadius: 16,
+                        // borderColor: 'red',
                         width: '100%',
-                        height: '70%',
+                        height: '100%',
                     },
                 ]}
                 device={device}
@@ -82,8 +82,8 @@ const CameraScreen = () => {
             <IconButton
                 style={{
                     position: 'absolute',
-                    zIndex: 9999999999,
-                    elevation: 10,
+                    bottom: '10%',
+                    left: '20%',
                 }}
                 mode="contained"
                 onPress={() => {
@@ -94,24 +94,26 @@ const CameraScreen = () => {
             />
 
             <CaptureButton
-                style={{position: 'absolute', bottom: 0, left: 0, right: 0}}
+                style={{position: 'absolute', bottom: '10%'}}
                 camera={camera}
                 onMediaCaptured={function (
                     media: PhotoFile | VideoFile,
                     type: 'photo' | 'video',
                 ): void {
-                    throw new Error('Function not implemented.');
+                    console.log(media);
+                    if (type === 'photo') {
+                        const photo = media as PhotoFile;
+                        setPhoto(photo);
+                        setIsCameraActive(false);
+                        setIsModalActive(true);
+                        // TODO: Fix modal opening when taking photo from detail
+                    }
                 }}
                 minZoom={0}
                 maxZoom={0}
                 cameraZoom={zoom}
                 flash={'off'}
                 enabled={isCameraInitialized}
-                setIsPressingButton={function (
-                    isPressingButton: boolean,
-                ): void {
-                    throw new Error('Function not implemented.');
-                }}
             />
         </View>
     );

@@ -20,7 +20,11 @@ import Reanimated, {
     withRepeat,
 } from 'react-native-reanimated';
 import type {Camera, PhotoFile, VideoFile} from 'react-native-vision-camera';
-import {CAPTURE_BUTTON_SIZE, SCREEN_HEIGHT, SCREEN_WIDTH} from '../../util/constants';
+import {
+    CAPTURE_BUTTON_SIZE,
+    SCREEN_HEIGHT,
+    SCREEN_WIDTH,
+} from '../../util/constants';
 
 const PAN_GESTURE_HANDLER_FAIL_X = [-SCREEN_WIDTH, SCREEN_WIDTH];
 const PAN_GESTURE_HANDLER_ACTIVE_Y = [-2, 2];
@@ -41,8 +45,6 @@ interface Props extends ViewProps {
     flash: 'off' | 'on';
 
     enabled: boolean;
-
-    setIsPressingButton: (isPressingButton: boolean) => void;
 }
 
 const _CaptureButton: React.FC<Props> = ({
@@ -53,15 +55,9 @@ const _CaptureButton: React.FC<Props> = ({
     cameraZoom,
     flash,
     enabled,
-    setIsPressingButton,
     style,
     ...props
 }): React.ReactElement => {
-    const pressDownDate = useRef<Date | undefined>(undefined);
-    const isRecording = useRef(false);
-    const recordingProgress = useSharedValue(0);
-    const isPressingButton = useSharedValue(false);
-
     //#region Camera Capture
     const takePhoto = useCallback(async () => {
         try {
@@ -69,7 +65,7 @@ const _CaptureButton: React.FC<Props> = ({
 
             console.log('Taking photo...');
             const photo = await camera.current.takePhoto({
-                qualityPrioritization: 'quality',
+                qualityPrioritization: 'speed',
                 flash: flash,
                 enableShutterSound: false,
             });
@@ -96,35 +92,21 @@ const _CaptureButton: React.FC<Props> = ({
             switch (event.state) {
                 case State.BEGAN: {
                     // enter "recording mode"
-                    recordingProgress.value = 0;
-                    isPressingButton.value = true;
-                    const now = new Date();
-                    pressDownDate.current = now;
-                    setIsPressingButton(true);
                     return;
                 }
                 case State.END:
                 case State.FAILED:
                 case State.CANCELLED: {
                     // exit "recording mode"
-                    try {
-                        if (pressDownDate.current == null)
-                            throw new Error(
-                                'PressDownDate ref .current was null!',
-                            );
-                        pressDownDate.current = undefined;
-                        await takePhoto();
-                    } finally {
-                        isPressingButton.value = false;
-                        setIsPressingButton(false);
-                    }
+                    await takePhoto();
+
                     return;
                 }
                 default:
                     break;
             }
         },
-        [isPressingButton, recordingProgress, setIsPressingButton, takePhoto],
+        [takePhoto],
     );
     //#endregion
     //#region Pan handler
@@ -165,15 +147,14 @@ const _CaptureButton: React.FC<Props> = ({
         () => ({
             transform: [
                 {
-                    scale: withSpring(isPressingButton.value ? 1 : 0, {
+                    scale: withSpring(1, {
                         mass: 1,
                         damping: 35,
                         stiffness: 300,
                     }),
                 },
             ],
-        }),
-        [isPressingButton],
+        })
     );
     const buttonStyle = useAnimatedStyle(() => {
         return {
@@ -182,7 +163,7 @@ const _CaptureButton: React.FC<Props> = ({
                 easing: Easing.linear,
             }),
         };
-    }, [enabled, isPressingButton]);
+    }, [enabled]);
 
     return (
         <TapGestureHandler
