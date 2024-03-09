@@ -110,8 +110,6 @@ const InventoryScreen = ({navigation}: {navigation: NavigationProp<any>}) => {
             style={{
                 height: '100%',
                 flex: 1,
-                borderWidth: 1,
-                borderColor: 'cyan',
             }}>
             <View style={styles.container}>
                 <SegmentedButtons

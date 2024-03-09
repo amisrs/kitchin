@@ -93,7 +93,7 @@ const Table = (props: TableProps) => {
             <DataTable>
                 <DataTable.Header
                     style={{backgroundColor: theme.colors.primaryContainer}}>
-                    <DataTable.Title>Item</DataTable.Title>
+                    <DataTable.Title style={{flex: 3}}>Item</DataTable.Title>
                     <DataTable.Title>Tags</DataTable.Title>
                     <DataTable.Title>Space</DataTable.Title>
                     <View style={{flexShrink: 1, flexGrow: 0, display: 'flex'}}>

@@ -1,7 +1,8 @@
-import {Platform, StyleSheet, UIManager, View} from 'react-native';
+import {Image, Platform, StyleSheet, UIManager, View} from 'react-native';
 import Item from '../../data/Item/Item';
 import {
     DataTable,
+    Icon,
     IconButton,
     Surface,
     Text,
@@ -24,6 +25,7 @@ import {useRealm} from '@realm/react';
 import ItemRepository from '../../data/Item/ItemRepository';
 import {Keyboard} from 'react-native';
 import Space from '../../data/Space/Space';
+import {DocumentDirectoryPath, exists} from '@dr.pogodin/react-native-fs';
 
 const TableRow = ({
     item,
@@ -95,6 +97,7 @@ const TableRow = ({
     const repository = new ItemRepository(realm);
     const quantityFieldRef = useRef<NativeTextInput>(null);
     const [shouldFocusNextRender, setShouldFocusNextRender] = useState(false);
+    const [photoExists, setPhotoExists] = useState(false);
 
     const [editPanelX, setEditPanelX] = useState(0);
     const isOpenedRow = openedRow !== null && openedRow._id.equals(item._id);
@@ -115,6 +118,16 @@ const TableRow = ({
             setShouldFocusNextRender(false);
         }
     });
+    useEffect(() => {
+        async function checkPhoto() {
+            setPhotoExists(
+                await exists(
+                    `${DocumentDirectoryPath}/photos/${item!._id.toString()}.jpg`,
+                ),
+            );
+        }
+        checkPhoto();
+    }, []);
 
     const updateItemQuantity = (
         quantity: number,
@@ -246,6 +259,7 @@ const TableRow = ({
             </View>
         );
     };
+
     return (
         <View>
             <Animated.View
@@ -256,36 +270,62 @@ const TableRow = ({
                     flex: 1,
                 }}>
                 <DataTable.Row
-                    style={styles.dataTableRow}
+                    style={{
+                        backgroundColor: theme.colors.surface,
+                        flexShrink: 0,
+                        flexGrow: 1,
+                        position: 'relative',
+                    }}
                     onPress={() =>
                         navigation.navigate('Inventory', {
                             screen: 'Details',
                             params: {id: item._id.toString()},
                         })
                     }>
-                    <DataTable.Cell textStyle={{color: theme.colors.primary}}>
-                        <View style={{flexDirection: 'column', padding: 8}}>
-                            <Text
-                                style={{
-                                    fontWeight: 'bold',
-                                    color: theme.colors.primary,
-                                }}>
-                                {item.name}
-                            </Text>
-                            <View
-                                style={{
-                                    flex: 1,
-                                    flexDirection: 'row',
-                                    alignItems: 'center',
-                                    justifyContent: 'space-between',
-                                }}>
-                                <Text>{unitString}</Text>
+                    <DataTable.Cell
+                        style={{flex: 3}}
+                        textStyle={{color: theme.colors.primary}}>
+                        <View
+                            style={{
+                                flex: 1,
+                                flexDirection: 'row',
+                                gap: 8,
+                                paddingVertical: 16
+                            }}>
+                            {photoExists ? (
+                                <Image
+                                    width={64}
+                                    height={64}
+                                    borderRadius={8}
+                                    source={{
+                                        uri: `file://${DocumentDirectoryPath}/photos/${item._id.toString()}.jpg`,
+                                    }}
+                                />
+                            ) : (
+                                <Icon size={64} source={'fruit-citrus'} color={theme.colors.onSurfaceDisabled}/>
+                            )}
+                            <View style={{flexDirection: 'column', padding: 8}}>
+                                <Text
+                                    style={{
+                                        fontSize: theme.fonts.headlineSmall.fontSize,
+                                        // fontWeight: 'bold',
+                                        color: theme.colors.primary,
+                                    }}>
+                                    {item.name}
+                                </Text>
+                                <View
+                                    style={{
+                                        flex: 1,
+                                        flexDirection: 'row',
+                                        alignItems: 'center',
+                                        justifyContent: 'space-between',
+                                    }}>
+                                    <Text>{unitString}</Text>
+                                </View>
                             </View>
                         </View>
                     </DataTable.Cell>
-                    <DataTable.Cell>
-                        tag
-                    </DataTable.Cell>
+                    <DataTable.Cell>tag</DataTable.Cell>
                     <DataTable.Cell textStyle={{color: theme.colors.primary}}>
                         <Text>
                             {item.linkingObjects<Space>(Space, 'items')[0]
