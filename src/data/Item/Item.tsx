@@ -31,9 +31,9 @@ class Item extends Realm.Object<Item> {
                 objectType: 'Space',
                 property: 'items',
             },
-            tags: {
+            categories: {
                 type: 'linkingObjects',
-                objectType: 'ItemTag',
+                objectType: 'ItemCategory',
                 property: 'items',
             },
         },

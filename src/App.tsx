@@ -20,7 +20,7 @@ import {SafeAreaProvider} from 'react-native-safe-area-context';
 import {Keyboard} from 'react-native';
 import {GestureHandlerRootView} from 'react-native-gesture-handler';
 import {BottomSheetModal, BottomSheetModalProvider} from '@gorhom/bottom-sheet';
-import ItemTag from './data/Item/ItemTag';
+import ItemCategory from './data/Item/ItemCategory';
 import {PhotoFile, useCameraPermission} from 'react-native-vision-camera';
 import {CameraContext} from './components/Camera/CameraContext';
 import CameraScreen from './screens/CameraScreen';
@@ -39,7 +39,7 @@ function App(): React.JSX.Element {
     const Tab = createMaterialBottomTabNavigator();
     return (
         <RealmProvider
-            schema={[Item, ItemHistoryLine, ItemTag, Space]}
+            schema={[Item, ItemHistoryLine, ItemCategory, Space]}
             deleteRealmIfMigrationNeeded={true}
             schemaVersion={2}>
             <PaperProvider theme={MD3LightTheme}>

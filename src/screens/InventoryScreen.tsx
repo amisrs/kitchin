@@ -127,7 +127,7 @@ const InventoryScreen = ({navigation}: {navigation: NavigationProp<any>}) => {
                             label: 'Space',
                             icon: 'wardrobe',
                         },
-                        {value: 'Tag', label: 'Tag', icon: 'tag'},
+                        {value: 'Category', label: 'Category', icon: 'tag'},
                         {
                             value: 'Expiry',
                             label: 'Expiry',

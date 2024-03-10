@@ -1,6 +1,6 @@
 import Item from "./Item";
 
-class ItemTag extends Realm.Object<ItemTag> {
+class ItemCategory extends Realm.Object<ItemCategory> {
     _id: Realm.BSON.ObjectId = new Realm.BSON.ObjectId();
     name: string = 'default';
     color: string = '#000000';
@@ -8,7 +8,7 @@ class ItemTag extends Realm.Object<ItemTag> {
     items: Realm.List<Item> = new Realm.List();
 
     static schema: Realm.ObjectSchema = {
-        name: 'ItemTag',
+        name: 'ItemCategory',
         properties: {
             _id: { type: "objectId", default: () => new Realm.BSON.ObjectId() },
             name: 'string',
@@ -20,4 +20,4 @@ class ItemTag extends Realm.Object<ItemTag> {
     }
 }
 
-export default ItemTag;
+export default ItemCategory;

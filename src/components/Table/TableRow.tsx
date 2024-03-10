@@ -307,7 +307,7 @@ const TableRow = ({
                             <View style={{flexDirection: 'column', padding: 8}}>
                                 <Text
                                     style={{
-                                        fontSize: theme.fonts.headlineSmall.fontSize,
+                                        fontSize: theme.fonts.titleMedium.fontSize,
                                         // fontWeight: 'bold',
                                         color: theme.colors.primary,
                                     }}>
@@ -325,7 +325,7 @@ const TableRow = ({
                             </View>
                         </View>
                     </DataTable.Cell>
-                    <DataTable.Cell>tag</DataTable.Cell>
+                    <DataTable.Cell>Categories</DataTable.Cell>
                     <DataTable.Cell textStyle={{color: theme.colors.primary}}>
                         <Text>
                             {item.linkingObjects<Space>(Space, 'items')[0]

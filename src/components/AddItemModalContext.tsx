@@ -15,6 +15,8 @@ export const AddItemModalContext = createContext<AddItemModalContextType>({
     setAddItemSpace: (space: string | null) => {},
     modalRef: {} as RefObject<BottomSheetModal>,
     setModalRef: (modalRef: RefObject<BottomSheetModal>) => {},
+    addItemCategories: [],
+    setAddItemCategories: (categories: string[]) => {},
 });
 
 export interface AddItemModalContextType {
@@ -30,6 +32,8 @@ export interface AddItemModalContextType {
     setAddItemSpace: (space: string | null) => void;
     modalRef: RefObject<BottomSheetModal> | null;
     setModalRef: (modalRef: RefObject<BottomSheetModal>) => void;
+    addItemCategories: string[];
+    setAddItemCategories: (categories: string[]) => void;
 }
 
 const AddItemModalContextProvider = ({
@@ -42,7 +46,7 @@ const AddItemModalContextProvider = ({
     const [addItemQuantity, setAddItemQuantity] = useState(0);
     const [addItemUnit, setAddItemUnit] = useState('');
     const [addItemSpace, setAddItemSpace] = useState<string | null>(null);
-    const [addItemTags, setAddItemTags] = useState<string[]>([]);
+    const [addItemCategories, setAddItemCategories] = useState<string[]>([]);
     const [modalRef, setModalRef] =
         useState<RefObject<BottomSheetModal> | null>(null);
     const isTablet = isTabletDimensions();
@@ -71,6 +75,8 @@ const AddItemModalContextProvider = ({
                 setAddItemSpace,
                 modalRef,
                 setModalRef,
+                addItemCategories,
+                setAddItemCategories,
             }}>
             {children}
         </AddItemModalContext.Provider>

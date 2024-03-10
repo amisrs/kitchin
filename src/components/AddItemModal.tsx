@@ -26,7 +26,7 @@ import {
     useState,
 } from 'react';
 import {Keyboard, View, StyleSheet, Pressable, Image} from 'react-native';
-import {Dropdown} from 'react-native-element-dropdown';
+import {Dropdown, MultiSelect} from 'react-native-element-dropdown';
 import Modal from 'react-native-modal';
 import {CameraContext} from './Camera/CameraContext';
 import CameraScreen from '../screens/CameraScreen';
@@ -112,6 +112,8 @@ export const AddItemModal = ({
         setAddItemSpace,
         modalRef,
         setModalRef,
+        addItemCategories,
+        setAddItemCategories,
     } = useContext(AddItemModalContext);
 
     useEffect(() => {
@@ -135,63 +137,67 @@ export const AddItemModal = ({
 
     const renderAddItemForm = (isTablet: boolean) => {
         return (
-            <>
+            <View style={{width: '100%'}}>
                 {isTablet ? (
                     <View
                         style={{
                             gap: 16,
                         }}>
-                        <Text variant="titleLarge">Add an item</Text>
                         <View style={{flexDirection: 'row', gap: 16}}>
-                            <TouchableRipple
-                                onPress={() => {
-                                    setIsCameraActive(true);
-                                    setIsModalActive(false);
-                                }}
-                                style={{
-                                    borderColor: theme.colors.outline,
-                                    borderStyle: 'dashed',
-                                    borderWidth: 2,
-                                    borderRadius: 8,
-                                    minHeight: 100,
-                                    flexGrow: 0,
-                                    aspectRatio: 1,
-                                    justifyContent: 'center',
-                                    alignItems: 'center',
-                                }}>
-                                <View>
-                                    {photo !== null && (
-                                        <>
-                                            <Image
-                                                width={100}
-                                                height={100}
-                                                borderRadius={8}
-                                                source={{
-                                                    uri: `file://${photo?.path}`,
-                                                }}
+                            <View style={{minHeight: 100, flexGrow: 0}}>
+                                <TouchableRipple
+                                    onPress={() => {
+                                        setIsCameraActive(true);
+                                        setIsModalActive(false);
+                                    }}
+                                    style={{
+                                        borderColor: theme.colors.outline,
+                                        borderStyle: 'dashed',
+                                        borderWidth: 2,
+                                        borderRadius: 8,
+                                        marginTop: 6,
+                                        minHeight: 120,
+                                        // flexGrow: 0,
+                                        aspectRatio: 1,
+                                        justifyContent: 'center',
+                                        alignItems: 'center',
+                                    }}>
+                                    <View>
+                                        {photo !== null && (
+                                            <>
+                                                <Image
+                                                    width={100}
+                                                    height={100}
+                                                    borderRadius={8}
+                                                    source={{
+                                                        uri: `file://${photo?.path}`,
+                                                    }}
+                                                />
+                                                <IconButton
+                                                    style={{
+                                                        position: 'absolute',
+                                                        top: 0,
+                                                        right: 0,
+                                                    }}
+                                                    size={16}
+                                                    mode="contained"
+                                                    icon={'close'}
+                                                    onPress={() =>
+                                                        setPhoto(null)
+                                                    }
+                                                />
+                                            </>
+                                        )}
+                                        {photo === null && (
+                                            <Icon
+                                                size={48}
+                                                source={'camera-plus'}
+                                                color={theme.colors.outline}
                                             />
-                                            <IconButton
-                                                style={{
-                                                    position: 'absolute',
-                                                    top: 0,
-                                                    right: 0,
-                                                }}
-                                                size={16}
-                                                mode="contained"
-                                                icon={'close'}
-                                                onPress={() => setPhoto(null)}
-                                            />
-                                        </>
-                                    )}
-                                    {photo === null && (
-                                        <Icon
-                                            size={48}
-                                            source={'camera-plus'}
-                                            color={theme.colors.outline}
-                                        />
-                                    )}
-                                </View>
-                            </TouchableRipple>
+                                        )}
+                                    </View>
+                                </TouchableRipple>
+                            </View>
                             <View style={{flex: 1, gap: 16}}>
                                 <View style={{flexDirection: 'row', gap: 16}}>
                                     <TextInput
@@ -234,84 +240,158 @@ export const AddItemModal = ({
                                         }
                                         value={addItemUnit}
                                     />
-                                    {/* <Text>{dropdownContainerOffset}</Text> */}
                                 </View>
+                                <Animated.View
+                                    style={[
+                                        {
+                                            display: 'flex',
+                                            flexDirection: 'row',
+                                            width: '100%',
+                                            gap: 16,
+                                        },
+                                        animatedStyles,
+                                    ]}>
+                                    <MultiSelect
+                                        style={{
+                                            flex: 1,
+                                            height: 50,
+                                            borderColor: theme.colors.outline,
+                                            borderWidth: 1,
+                                            borderRadius: theme.roundness,
+                                            paddingHorizontal: 16,
+                                        }}
+                                        data={[
+                                            {label: 'test', value: 'test'},
+                                            {
+                                                label: 'test1',
+                                                value: 'test1',
+                                            },
+                                        ]}
+                                        labelField="label"
+                                        valueField="value"
+                                        search
+                                        placeholder={
+                                            addItemCategories.length === 0
+                                                ? 'Select categories'
+                                                : `${addItemCategories.length} categories selected`
+                                        }
+                                        value={addItemCategories}
+                                        visibleSelectedItem={false}
+                                        onChange={(values: string[]) => {
+                                            setAddItemCategories(values);
+                                        }}
+                                        renderItem={(item, selected) => {
+                                            return (
+                                                <View
+                                                    style={{
+                                                        padding: 16,
+                                                        flexDirection: 'row',
+                                                        justifyContent:
+                                                            'space-between',
+                                                        alignItems: 'center',
+                                                    }}>
+                                                    <Text
+                                                        style={{
+                                                            color: theme.colors
+                                                                .primary,
+                                                            ...theme.fonts
+                                                                .bodyLarge,
+                                                            fontWeight: selected ? 'bold' : 'normal',
+                                                        }}>
+                                                        {item.label}
+                                                    </Text>
+                                                    {selected ? (
+                                                        <Icon
+                                                            size={24}
+                                                            source={
+                                                                'check-circle'
+                                                            }
+                                                            color={
+                                                                theme.colors
+                                                                    .primary
+                                                            }
+                                                        />
+                                                    ) : null}
+                                                </View>
+                                            );
+                                        }}
+                                    />
+
+                                    <Dropdown
+                                        style={{
+                                            flex: 1,
+                                            height: 50,
+                                            borderColor: theme.colors.outline,
+                                            borderWidth: 1,
+                                            borderRadius: theme.roundness,
+                                            paddingHorizontal: 16,
+                                        }}
+                                        selectedTextStyle={{
+                                            color: theme.colors
+                                                .onPrimaryContainer,
+                                        }}
+                                        placeholderStyle={{
+                                            color: theme.colors.secondary,
+                                        }}
+                                        containerStyle={{
+                                            top: isTablet
+                                                ? 0
+                                                : -15 + dropdownContainerOffset,
+                                            borderWidth: 1,
+                                            borderRadius: theme.roundness,
+                                        }}
+                                        keyboardAvoiding={true}
+                                        showsVerticalScrollIndicator={true}
+                                        searchPlaceholder="Search..."
+                                        search={spaces.length > 5}
+                                        data={spaces}
+                                        maxHeight={240}
+                                        labelField="label"
+                                        valueField="value"
+                                        placeholder="Select a space"
+                                        value={addItemSpace}
+                                        onChange={space => {
+                                            setAddItemSpace(space.value);
+                                        }}
+                                        renderItem={item => {
+                                            return (
+                                                <View
+                                                    style={{
+                                                        padding: 16,
+                                                        flexDirection: 'row',
+                                                        justifyContent:
+                                                            'space-between',
+                                                        alignItems: 'center',
+                                                    }}>
+                                                    <Text
+                                                        style={{
+                                                            color: theme.colors
+                                                                .primary,
+                                                            ...theme.fonts
+                                                                .bodyLarge,
+                                                        }}>
+                                                        {item.label}
+                                                    </Text>
+                                                    {item.value ===
+                                                    addItemSpace ? (
+                                                        <Icon
+                                                            size={24}
+                                                            source={
+                                                                'check-circle'
+                                                            }
+                                                            color={
+                                                                theme.colors
+                                                                    .primary
+                                                            }
+                                                        />
+                                                    ) : null}
+                                                </View>
+                                            );
+                                        }}
+                                    />
+                                </Animated.View>
                             </View>
                         </View>
-                        <Animated.View
-                            style={[{flexDirection: 'row'}, animatedStyles]}>
-                            <Dropdown
-                                style={{
-                                    height: 50,
-                                    borderColor: theme.colors.outline,
-                                    borderWidth: 1,
-                                    borderRadius: theme.roundness,
-                                    paddingHorizontal: 16,
-                                    width: '100%',
-                                }}
-                                selectedTextStyle={{
-                                    color: theme.colors.onPrimaryContainer,
-                                }}
-                                placeholderStyle={{
-                                    color: theme.colors.secondary,
-                                }}
-                                containerStyle={{
-                                    top: isTablet
-                                        ? 0
-                                        : -15 + dropdownContainerOffset,
-                                    borderWidth: 1,
-                                    borderRadius: theme.roundness,
-                                }}
-                                keyboardAvoiding={true}
-                                showsVerticalScrollIndicator={true}
-                                searchPlaceholder="Search..."
-                                search={spaces.length > 5}
-                                data={spaces}
-                                maxHeight={240}
-                                labelField="label"
-                                valueField="value"
-                                placeholder="Select a space"
-                                value={addItemSpace}
-                                onChange={space => {
-                                    setAddItemSpace(space.value);
-                                }}
-                                onFocus={() => {
-                                    // Hack to get dropdown to show up offset if opened whilst keyboard is open
-                                    // if (!isKeyboardOpen) {
-                                    //     setBaseOffsetValue(currentPosition?.value || 0);
-                                    // }
-                                    // setDropdownContainerOffset(
-                                    //     isKeyboardOpen ? baseOffsetValue || 0 : 0,
-                                    // );
-                                }}
-                                renderItem={item => {
-                                    return (
-                                        <View
-                                            style={{
-                                                padding: 16,
-                                                flexDirection: 'row',
-                                                justifyContent: 'space-between',
-                                                alignItems: 'center',
-                                            }}>
-                                            <Text
-                                                style={{
-                                                    color: theme.colors.primary,
-                                                    ...theme.fonts.bodyLarge,
-                                                }}>
-                                                {item.label}
-                                            </Text>
-                                            {item.value === addItemSpace ? (
-                                                <Icon
-                                                    size={24}
-                                                    source={'check'}
-                                                    color={theme.colors.primary}
-                                                />
-                                            ) : null}
-                                        </View>
-                                    );
-                                }}
-                            />
-                        </Animated.View>
                         <View style={{padding: 8}}>
                             <Button
                                 mode="contained"
@@ -536,7 +616,7 @@ export const AddItemModal = ({
                         </View>
                     </View>
                 )}
-            </>
+            </View>
         );
     };
     const renderCamera = () => {
@@ -593,11 +673,8 @@ export const AddItemModal = ({
                     }}>
                     <View
                         style={{
-                            position: 'relative',
+                            position: 'absolute',
                             width: '70%',
-                            // height: 'auto',
-                            // justifyContent: 'center',
-                            // alignItems: 'center',
                         }}>
                         <View
                             style={{
