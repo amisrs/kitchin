@@ -109,21 +109,20 @@ const Table = (props: TableProps) => {
                     </View>
                 </DataTable.Header>
 
-                <KeyboardAwareScrollView
+                <KeyboardAwareFlatList
                     style={styles.scrollContainer}
-                    keyboardShouldPersistTaps={'handled'}>
-                    {data.map(item => {
-                        return (
-                            <TableRow
-                                item={item}
-                                navigation={navigation}
-                                key={item._objectKey()}
-                                showSnackbarWithText={showSnackBarWithText}
-                            />
-                        );
-                    })}
-                    <View style={{height: 200}} />
-                </KeyboardAwareScrollView>
+                    keyboardShouldPersistTaps={'handled'}
+                    data={data}
+                    renderItem={({item}) => (
+                        <TableRow
+                            item={item}
+                            navigation={navigation}
+                            showSnackbarWithText={showSnackBarWithText}
+                        />
+                    )}
+                    ListFooterComponent={
+                        <View style={{height: 200}} />
+                    }></KeyboardAwareFlatList>
             </DataTable>
         </TableContext.Provider>
     );

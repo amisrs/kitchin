@@ -8,6 +8,7 @@ import {
     IconButton,
     Surface,
     Text,
+    TextInput,
     TouchableRipple,
     useTheme,
 } from 'react-native-paper';
@@ -16,8 +17,16 @@ import Carousel from 'react-native-reanimated-carousel';
 import {Suspense, useContext, useEffect, useState} from 'react';
 import {NavigationProp} from '@react-navigation/native';
 import Item from '../data/Item/Item';
-import {DocumentDirectoryPath, exists} from '@dr.pogodin/react-native-fs';
+import {
+    DocumentDirectoryPath,
+    copyFile,
+    exists,
+    readDir,
+    unlink,
+} from '@dr.pogodin/react-native-fs';
 import {CameraContext} from '../components/Camera/CameraContext';
+import {deleteFile} from 'realm';
+import {PhotoFile} from 'react-native-vision-camera';
 
 const InventoryDetailScreen = ({
     route,
@@ -26,8 +35,12 @@ const InventoryDetailScreen = ({
     route: any;
     navigation: NavigationProp<any>;
 }) => {
-    const {isCameraActive, setIsCameraActive} = useContext(CameraContext);
+    const {photo, isCameraActive, setIsCameraActive, setOnCapture} =
+        useContext(CameraContext);
+
     const [photoExists, setPhotoExists] = useState(false);
+    const [refresh, setRefresh] = useState(false);
+    const [isEditingName, setIsEditingName] = useState(false);
     const {id} = route.params;
     const realm = useRealm();
     const theme = useTheme();
@@ -40,18 +53,42 @@ const InventoryDetailScreen = ({
     }
 
     const units = Array.from(item.units.entries());
-
-    const hasMoreThanOneUnitWithValue = item?.units.size > 1;
     useEffect(() => {
         async function checkPhoto() {
-            setPhotoExists(
-                await exists(
-                    `${DocumentDirectoryPath}/photos/${item!._id.toString()}.jpg`,
-                ),
-            );
+            if (item) {
+                setPhotoExists(await exists(item.imagePath));
+            }
         }
         checkPhoto();
-    }, []);
+    }, [item.imagePath]);
+
+    const usePhoto = async (photo: PhotoFile) => {
+        const timestamp = new Date().getTime();
+        const doesPhotoAlreadyExist = await exists(item.imagePath);
+        if (doesPhotoAlreadyExist) {
+            await unlink(item.imagePath);
+        }
+
+        await copyFile(
+            photo?.path,
+            `${DocumentDirectoryPath}/photos/${id.toString()}_${timestamp}.jpg`,
+        );
+        repo.Update(item._id, {
+            imagePath: `${DocumentDirectoryPath}/photos/${id.toString()}_${timestamp}.jpg`,
+        });
+        setPhotoExists(true);
+        setRefresh(!refresh);
+    };
+
+    const deletePhoto = async () => {
+        await unlink(item.imagePath);
+        repo.Update(item._id, {
+            imagePath: '',
+        });
+        setPhotoExists(false);
+        setRefresh(!refresh);
+    };
+
     return (
         <View>
             <Surface
@@ -64,6 +101,7 @@ const InventoryDetailScreen = ({
                 }}>
                 <TouchableRipple
                     onPress={() => {
+                        setOnCapture(() => usePhoto);
                         setIsCameraActive(true);
                     }}
                     style={{
@@ -92,7 +130,7 @@ const InventoryDetailScreen = ({
                                     height={100}
                                     borderRadius={8}
                                     source={{
-                                        uri: `file://${DocumentDirectoryPath}/photos/${item._id.toString()}.jpg`,
+                                        uri: `file://${item.imagePath}`,
                                     }}
                                 />
                                 <IconButton
@@ -105,13 +143,42 @@ const InventoryDetailScreen = ({
                                     size={16}
                                     mode="contained"
                                     icon={'close'}
-                                    onPress={() => {}}
+                                    onPress={() => deletePhoto()}
                                 />
                             </View>
                         )}
                     </View>
                 </TouchableRipple>
-                <Text variant="titleLarge">{item.name}</Text>
+                <View
+                    style={{
+                        flexDirection: 'row',
+                        gap: 4,
+                        alignItems: 'center',
+                    }}>
+                    <TextInput
+                        style={{flex: 1, width: 'auto'}}
+                        mode="outlined"
+                        placeholder={item.name}
+                        onChange={text => {
+                            repo.Update(item._id, {
+                                name: text.nativeEvent.text,
+                            });
+                        }}
+                    />
+                    <IconButton
+                        style={{}}
+                        size={16}
+                        mode="contained"
+                        icon={'pencil'}
+                        onPress={() => {
+                            setIsEditingName(!isEditingName);
+                        }}
+                    />
+                </View>
+                <Text variant="titleSmall">{item.imagePath}</Text>
+                <Text variant="titleSmall">
+                    {photoExists ? 'Photo exists' : 'No photo'}
+                </Text>
                 <Text variant="titleMedium">
                     {units[0][1]} {units[0][0]}
                 </Text>

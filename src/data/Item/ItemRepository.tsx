@@ -47,6 +47,22 @@ class ItemRepository implements IRepository<Item> {
         return true;
     }
 
+    Update(id : string | Realm.BSON.ObjectId, fields: Partial<Item>): boolean {
+        const item = this.realm.objectForPrimaryKey(Item, id);
+        if (!item) {
+            return false;
+        }
+        try {
+            this.realm.write(() => {
+                Object.assign(item, fields);
+            });
+        } catch (error) {
+            console.log(error);
+            return false;
+        }
+        return true;
+    }
+
     UpdateOperationRemove(
         id: string | Realm.BSON.ObjectId,
         quantity: number,

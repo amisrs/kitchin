@@ -35,6 +35,10 @@ function App(): React.JSX.Element {
     const [isKeyboardOpen, setIsKeyboardOpen] = useState(false);
     const [photo, setPhoto] = useState<PhotoFile | null>(null);
     const [isCameraActive, setIsCameraActive] = useState(false);
+    const [openModalAfterCapture, setOpenModalAfterCapture] = useState(false);
+    const [onCapture, setOnCapture] = useState<(photo: PhotoFile) => void>(
+        () => () => {},
+    );
 
     const Tab = createMaterialBottomTabNavigator();
     return (
@@ -52,13 +56,19 @@ function App(): React.JSX.Element {
                                     setPhoto,
                                     isCameraActive,
                                     setIsCameraActive,
+                                    openModalAfterCapture,
+                                    setOpenModalAfterCapture,
+                                    onCapture,
+                                    setOnCapture,
                                 }}>
                                 <AddItemModalContextProvider>
                                     <CameraScreen />
                                     <NavigationContainer>
                                         <Tab.Navigator
                                             keyboardHidesNavigationBar={true}
-                                            barStyle={{position: 'relative'}}>
+                                            barStyle={{
+                                                position: 'relative',
+                                            }}>
                                             <Tab.Screen
                                                 name="Inventory"
                                                 component={

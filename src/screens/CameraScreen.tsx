@@ -19,8 +19,16 @@ const CameraScreen = () => {
     const camera = useRef<Camera>(null);
     const zoom = useSharedValue(1);
     const theme = useTheme();
-    const {isCameraActive, setIsCameraActive, photo, setPhoto} =
-        useContext(CameraContext);
+    const {
+        isCameraActive,
+        setIsCameraActive,
+        photo,
+        setPhoto,
+        openModalAfterCapture,
+        setOpenModalAfterCapture,
+        onCapture,
+        setOnCapture,
+    } = useContext(CameraContext);
     const {isModalActive, setIsModalActive} = useContext(AddItemModalContext);
 
     const [isCameraInitialized, setIsCameraInitialized] = useState(false);
@@ -105,8 +113,12 @@ const CameraScreen = () => {
                         const photo = media as PhotoFile;
                         setPhoto(photo);
                         setIsCameraActive(false);
-                        setIsModalActive(true);
-                        // TODO: Fix modal opening when taking photo from detail
+                        if (openModalAfterCapture) {
+                            setIsModalActive(true);
+                        }
+                        onCapture(photo);
+                        setOnCapture(() => () => {});
+
                     }
                 }}
                 minZoom={0}
